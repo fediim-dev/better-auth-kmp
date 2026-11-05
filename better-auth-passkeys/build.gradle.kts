@@ -37,7 +37,7 @@ class ContractServerDirArgument(@get:Internal val dir: File) : CommandLineArgume
 }
 
 // Read lazily: only evaluated when jvmTest's inputs are computed.
-val nodeVersion = providers.exec { commandLine("node", "--version") }.standardOutput.asText
+val nodeVersion = providers.of(NodeVersionSource::class) {}
 
 tasks.named<Test>("jvmTest") {
   dependsOn(":better-auth-core:npmCi")

@@ -203,7 +203,7 @@ repositories {
 ## Build
 
 - `./gradlew check` builds and tests every target (iOS tests need macOS; browser tests need Chrome).
-- `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](tests/contract-harness).
+- `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](tests/contract-harness). The harness starts Node with only `PATH`, `HOME`, the temp-dir variables, `LANG` and `SystemRoot` from the environment, plus `BETTER_AUTH_TELEMETRY=false`.
 - `./gradlew publishToMavenLocal` installs into `~/.m2` without credentials.
 - `./gradlew publishAllPublicationsToGitHubPackagesRepository` publishes; credentials from `gpr.user`/`gpr.key` or `GITHUB_ACTOR`/`GITHUB_TOKEN`.
 - CI publishes on push to `main` (snapshots) and on `v*` tags. For a release, drop `-SNAPSHOT` from `version` in `gradle.properties` (and `VERSION` in each module) before tagging.

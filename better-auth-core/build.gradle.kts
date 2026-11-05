@@ -45,6 +45,9 @@ val npmCi by
       description = "Installs the contract server's pinned npm dependencies (no install scripts)."
       workingDir(contractServerDir.asFile)
       commandLine("npm", "ci", "--ignore-scripts", "--no-audit", "--no-fund")
+      // Exec inherits Gradle's environment; CI's publish credentials must not reach npm.
+      environment.remove("GITHUB_TOKEN")
+      environment.remove("GITHUB_ACTOR")
       inputs.files(
           contractServerDir.file("package.json"),
           contractServerDir.file("package-lock.json"),
@@ -53,7 +56,7 @@ val npmCi by
     }
 
 // Read lazily: only evaluated when jvmTest's inputs are computed.
-val nodeVersion = providers.exec { commandLine("node", "--version") }.standardOutput.asText
+val nodeVersion = providers.of(NodeVersionSource::class) {}
 
 tasks.named<Test>("jvmTest") {
   dependsOn(npmCi)
