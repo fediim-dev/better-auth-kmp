@@ -21,9 +21,10 @@ internal object ApiKeyRecordSerializer :
 
 /**
  * An API key as listed by the server; it never carries the secret: an incoming `key` is dropped and
- * not kept in [additionalFields]. [metadata] decodes as null when it is not a JSON object.
- * Rate-limit, refill and [permissions] fields are read-only (server-only). Unmodelled server fields
- * are kept in [additionalFields].
+ * not kept in [additionalFields]. [start] is the stored key prefix, not the secret. A string
+ * [metadata] holding a JSON object is parsed; any other non-object decodes as null. Rate-limit,
+ * refill and [permissions] fields are read-only (server-only). Unmodelled server fields are kept in
+ * [additionalFields].
  */
 @Serializable(with = ApiKeyRecordSerializer::class)
 @KeepGeneratedSerializer
@@ -55,6 +56,10 @@ public data class ApiKeyRecord(
 /**
  * Result of `api-key/create`: the one-time plaintext [key] secret and the stored [record]. The
  * server never returns [key] again; [toString] omits it.
+ */
+/**
+ * Only [toString] is redacted; [key] remains in `copy`/`componentN`/`equals`, so never serialize or
+ * persist this object.
  */
 public data class CreatedApiKey(val key: String, val record: ApiKeyRecord) {
   override fun toString(): String = "CreatedApiKey(record=$record)"

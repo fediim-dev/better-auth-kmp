@@ -88,18 +88,19 @@ class ApiKeyApiTest {
   fun t9ListGetUpdateDelete() = runTest {
     var next =
         ok(
-            """{"apiKeys":[{"id":"k1","key":"$hash","extra":1},{"id":"k2","metadata":[1]}],
+            """{"apiKeys":[{"id":"k1","key":"$hash","extra":1},{"id":"k2","metadata":[1]},{"id":"k3","metadata":"{\"projectId\":\"p3\"}"}],
             "total":2,"limit":null,"offset":null}"""
         )
     val rig = Rig { next }
     val api = rig.client.apiKeys
     val list = api.list().value()
     assertEquals("https://example.com/api/auth/api-key/list", rig.requests[0].url.toString())
-    assertEquals(listOf("k1", "k2"), list.map { it.id })
+    assertEquals(listOf("k1", "k2", "k3"), list.map { it.id })
     assertFalse("key" in list[0].additionalFields)
     assertFalse(list[0].toString().contains(hash))
     assertEquals(JsonPrimitive(1), list[0].additionalFields["extra"])
     assertNull(list[1].metadata)
+    assertEquals(JsonPrimitive("p3"), list[2].metadata?.get("projectId"))
 
     next = ok("""{"id":"k1","name":"n"}""")
     assertEquals("k1", api.get("k1").value().id)
