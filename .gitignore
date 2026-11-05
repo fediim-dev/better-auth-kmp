@@ -4,3 +4,4 @@ build/
 local.properties
 .idea/
 *.iml
+tests/contract-server/node_modules/
