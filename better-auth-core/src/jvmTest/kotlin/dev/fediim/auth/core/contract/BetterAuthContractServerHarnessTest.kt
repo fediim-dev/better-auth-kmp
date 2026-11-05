@@ -45,4 +45,33 @@ class BetterAuthContractServerHarnessTest {
       empty.delete()
     }
   }
+
+  @Test
+  fun childEnvironmentKeepsOnlyAllowlistAndDisablesTelemetry() {
+    val parent =
+        mapOf(
+            "PATH" to "/p",
+            "HOME" to "/h",
+            "TMPDIR" to "/t",
+            "LANG" to "C",
+            "GITHUB_TOKEN" to "ghp_evil",
+            "GITHUB_ACTOR" to "a",
+            "AWS_SECRET_ACCESS_KEY" to "x",
+            "BETTER_AUTH_TELEMETRY" to "true",
+        )
+    assertEquals(
+        mapOf(
+            "PATH" to "/p",
+            "HOME" to "/h",
+            "TMPDIR" to "/t",
+            "LANG" to "C",
+            "BETTER_AUTH_TELEMETRY" to "false",
+        ),
+        BetterAuthContractServerHarness.childEnvironment(parent),
+    )
+    assertEquals(
+        mapOf("PATH" to "C:\\w", "BETTER_AUTH_TELEMETRY" to "false"),
+        BetterAuthContractServerHarness.childEnvironment(mapOf("Path" to "C:\\w")),
+    )
+  }
 }

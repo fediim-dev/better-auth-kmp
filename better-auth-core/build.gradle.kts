@@ -53,7 +53,7 @@ val npmCi by
     }
 
 // Read lazily: only evaluated when jvmTest's inputs are computed.
-val nodeVersion = providers.exec { commandLine("node", "--version") }.standardOutput.asText
+val nodeVersion = providers.of(NodeVersionSource::class) {}
 
 tasks.named<Test>("jvmTest") {
   dependsOn(npmCi)

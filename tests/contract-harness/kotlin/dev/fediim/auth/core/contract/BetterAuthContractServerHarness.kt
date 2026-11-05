@@ -44,7 +44,8 @@ private constructor(val process: Process, port: Int) : AutoCloseable {
     private const val PORT_PREFIX = "PORT="
 
     /**
-     * Starts `node <serverDir>/server.mjs` and returns once it printed `PORT=<n>`.
+     * Starts `node <serverDir>/server.mjs` and returns once it printed `PORT=<n>`. The child gets
+     * only [childEnvironment] of this JVM's environment, so CI secrets never reach it.
      *
      * @throws IllegalStateException when the property `betterauth.contractServerDir` is unset and
      *   no [serverDir] is given, the process exits before printing the port (message holds the exit
@@ -57,8 +58,10 @@ private constructor(val process: Process, port: Int) : AutoCloseable {
       val builder =
           ProcessBuilder("node", File(serverDir, "server.mjs").absolutePath)
               .redirectErrorStream(true)
-      builder.environment().remove("GITHUB_TOKEN")
-      builder.environment().remove("GITHUB_ACTOR")
+      val env = builder.environment()
+      val allowed = childEnvironment(System.getenv())
+      env.clear()
+      env.putAll(allowed)
       val process =
           try {
             builder.start()
@@ -110,6 +113,23 @@ private constructor(val process: Process, port: Int) : AutoCloseable {
         stop(process)
         throw e
       }
+    }
+
+    private val ALLOWED_ENV = listOf("PATH", "HOME", "TMPDIR", "TEMP", "TMP", "SystemRoot", "LANG")
+
+    /**
+     * The variables of [parent] named in the allowlist (PATH, HOME, TMPDIR, TEMP, TMP, SystemRoot,
+     * LANG; names matched case-insensitively, stored under the allowlist spelling, so Windows
+     * `Path` becomes `PATH`), plus `BETTER_AUTH_TELEMETRY=false`, which overrides any parent value.
+     */
+    internal fun childEnvironment(parent: Map<String, String>): Map<String, String> {
+      val result = mutableMapOf<String, String>()
+      for ((key, value) in parent) {
+        val name = ALLOWED_ENV.firstOrNull { it.equals(key, ignoreCase = true) } ?: continue
+        result[name] = value
+      }
+      result["BETTER_AUTH_TELEMETRY"] = "false"
+      return result
     }
 
     private fun defaultServerDir(): File =
