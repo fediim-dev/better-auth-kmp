@@ -26,7 +26,7 @@ when (val result = client.signInEmail(SignInEmailRequest("a@b.com", "password"))
 ```
 
 - `baseUrl` must be `https`; `http` is accepted only for `localhost`, `127.0.0.1`, `::1`, or with `allowInsecureHttpForTesting = true`. Anything else throws `IllegalArgumentException`.
-- Requests send `Authorization: Bearer <token>`; the token is read from the `set-auth-token` response header (body `token` as fallback for sign-in/sign-up) and is dropped if `signOut()` ran meanwhile. See CONSTRAINTS C5.
+- Requests send `Authorization: Bearer <token>`; the token is read from the `set-auth-token` response header (body `token` as fallback for sign-in/sign-up) and is dropped if `signOut()` ran meanwhile. A `set-auth-token` on a failed sign-in is ignored. See CONSTRAINTS C5.
 - Server fields the models do not declare are kept in `additionalFields` (CONSTRAINTS C4).
 - `SettingsAuthTokenStorage` stores the token as plaintext in the platform settings store; implement `AuthTokenStorage` for keystore-backed storage.
 
@@ -44,6 +44,29 @@ val created = client.apiKeys.create(CreateApiKeyRequest(name = "ci"))
 - A custom `AuthTokenStorage` must override `activeOrganizationId()` and `writeActiveOrganizationIdIfEpoch()` to persist it (existing implementations still compile and run on the JVM; they just cache nothing), and its `clear()` must also remove the id.
 - The raw API key is returned only in `CreatedApiKey.key`; showing it once is the app's job. Records from `list`/`get`/`update` never carry it.
 - Server requirements: `apiKey({ enableMetadata: true })` for metadata, and `enableSessionForAPIKeys: true` to authenticate with `BetterAuthConfig.apiKey` (`X-API-Key`). That option makes `X-API-Key` a full session of the key owner on every endpoint, overriding any Bearer token (including creating more keys and managing organizations), and the key's rate limit (default 10 per day) counts every request: do not combine `BetterAuthConfig.apiKey` with user sign-in, and never ship a key in a distributed client. The contract server enables it for tests only. Rate-limit and permission fields are server-only and read-only here. See CONSTRAINTS C4 and C5.
+
+### Two-factor
+
+`client.twoFactor` covers the `twoFactor()` plugin. A sign-in that needs a second factor is a `Success` whose body carries `twoFactorRedirect`; read it with `signInResult`:
+
+```kotlin
+when (val outcome = client.signInEmail(request)) {
+  is BetterAuthResult.Success ->
+    when (val step = outcome.value.signInResult) {
+      is SignInResult.SignedIn -> step.response.user
+      is SignInResult.TwoFactorRequired -> client.twoFactor.verifyTotp(codeFromUser) // or verifyBackupCode
+    }
+  else -> Unit
+}
+```
+
+- Enrol with `enable(password)`; it only prepares the secret. Two-factor becomes active after a `verifyTotp` with a code from it, called while signed in (this also rotates the session). `TotpEnrollment.totpUri` and the backup codes are credentials and never appear in `toString()`.
+- **Challenge mode.** After a `TwoFactorRequired` sign-in, `verifyTotp`/`verifyBackupCode` send no `Authorization` header (a stored token of another user must not take over) and replay the signed `two_factor` challenge cookie the sign-in captured. The new session token is stored from `set-auth-token`. A wrong code keeps the challenge (the server allows 5 attempts within 10 minutes); success, the next `signInEmail` or `signOut()` end it. The challenge lives in memory only: if a sign-in is abandoned it stays pending until the next `signInEmail`/`signOut()`, and a signed-in `verifyTotp` (enrolment) fails in that time.
+- The sign-in response of a challenged account carries a `set-auth-token` for a session the server deletes; the SDK ignores it and stores no token until the second factor succeeds.
+- Not exposed: `trustDevice`, OTP send/verify, `disableSession`.
+- Browsers (js, wasmJs) cannot read `Set-Cookie` or set `Cookie`; the browser's own cookie jar carries the challenge. That works when the auth server is same-origin with the page, or with CORS credentials, `SameSite=None` and a `fetch` that includes credentials. Cross-origin setups are documented, not covered by the test suite.
+- The SDK adds `Origin: <baseUrl origin>` to the one request that replays a challenge cookie, because Better Auth rejects a cookie-bearing POST without a trusted origin; the server's own origin is always trusted.
+- On iOS the Darwin engine disables cookie storage by default, so the SDK's replay is the only cookie sent; runtime confirmation is tracked in #10.
 
 ### Social sign-in
 
@@ -75,6 +98,27 @@ Security notes ([CONSTRAINTS.md C6](CONSTRAINTS.md)):
 - Call `history.replaceState` synchronously right after `consumeRedirectCallback()` returns, before any `await`, whether or not it returned null. The landing page needs `Referrer-Policy: no-referrer` and no third-party scripts.
 - With custom-scheme receivers, the app must not be claimable by other apps; prefer Android App Links / iOS universal links. iOS `ASWebAuthenticationSession` delivers the callback to the session only and is unaffected.
 
+## better-auth-passkeys
+
+```kotlin
+val passkeys = BetterAuthPasskeyClient(client, CredentialManagerPasskeyAuthenticator { activity })
+passkeys.registerPasskey(name = "Pixel")   // signed in, fresh session
+passkeys.signInWithPasskey()               // stores the session token like signInEmail
+passkeys.listPasskeys()
+passkeys.deletePasskey(id)
+```
+
+A local failure is `BetterAuthResult.Failure(0, error.code)` with code `PASSKEY_UNSUPPORTED` (nothing is sent), `cancelled`, `no_credential` or `PASSKEY_FAILED`.
+
+| Platform | Authenticator | Notes |
+|---|---|---|
+| js / wasmJs | `BrowserPasskeyAuthenticator()` | `navigator.credentials`, needs https or localhost; challenge cookies use the browser jar (same-origin, see Two-factor above) |
+| Android | `CredentialManagerPasskeyAuthenticator { activity }` | `androidx.credentials` 1.6.0; Digital Asset Links for the server's `rpID`, and the passkey plugin must accept the app's `android:apk-key-hash:<hash>` origin |
+| iOS | `IosPasskeyAuthenticator(anchor = { window })` | `ASAuthorizationPlatformPublicKeyCredentialProvider`, iOS 16+; Associated Domains `webcredentials:<rpID>` and an `apple-app-site-association` file on the server; runtime check pending (#10) |
+| JVM | `JvmPasskeyAuthenticator(hook = null)` | unsupported without a `hook` authenticator |
+
+Server: `passkey({ rpID, origin })` with `rpID` the domain the app is linked to and `origin` (a string or list) containing every origin a ceremony runs from. Better Auth keeps the challenge in a signed cookie (`<prefix>.better-auth-passkey`, 5 minutes); the SDK keeps it in memory and replays it once on the verify call (CONSTRAINTS C5). The live test suite covers the options call and negative verifies; a full ceremony needs a real authenticator.
+
 ## Consuming from GitHub Packages
 
 ```kotlin
@@ -94,7 +138,7 @@ repositories {
 ## Build
 
 - `./gradlew check` builds and tests every target (iOS tests need macOS; browser tests need Chrome).
-- `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies.
+- `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](tests/contract-harness).
 - `./gradlew publishToMavenLocal` installs into `~/.m2` without credentials.
 - `./gradlew publishAllPublicationsToGitHubPackagesRepository` publishes; credentials from `gpr.user`/`gpr.key` or `GITHUB_ACTOR`/`GITHUB_TOKEN`.
 - CI publishes on push to `main` (snapshots) and on `v*` tags. For a release, drop `-SNAPSHOT` from `version` in `gradle.properties` (and `VERSION` in each module) before tagging.

@@ -9,6 +9,9 @@ import io.ktor.util.AttributeKey
 internal class BearerPluginConfig {
   lateinit var storage: AuthTokenStorage
   var apiKey: String? = null
+
+  /** `scheme://host[:port]` of the server, sent as `Origin` on requests that carry a `Cookie`. */
+  var origin: String? = null
 }
 
 internal const val AUTH_TOKEN_HEADER = "set-auth-token"
@@ -19,15 +22,28 @@ internal val StartEpochKey = AttributeKey<Long>("BetterAuthStartEpoch")
 /** Request attribute that disables `set-auth-token` capture for that request. */
 internal val SkipTokenCaptureKey = AttributeKey<Unit>("BetterAuthSkipTokenCapture")
 
+/** Request attribute that stops the stored token from being sent as `Authorization`. */
+internal val OmitBearerKey = AttributeKey<Unit>("BetterAuthOmitBearer")
+
 internal val BearerTokenPlugin =
     createClientPlugin("BetterAuthBearer", ::BearerPluginConfig) {
       val storage = pluginConfig.storage
       val apiKey = pluginConfig.apiKey
+      val origin = pluginConfig.origin
 
       onRequest { request, _ ->
         request.attributes.put(StartEpochKey, storage.epoch())
-        if (!request.headers.contains(HttpHeaders.Authorization)) {
+        if (
+            !request.headers.contains(HttpHeaders.Authorization) &&
+                !request.attributes.contains(OmitBearerKey)
+        ) {
           storage.token()?.let { request.header(HttpHeaders.Authorization, "Bearer $it") }
+        }
+        // better-auth rejects a cookie-bearing POST without a trusted Origin (CSRF check); the
+        // server's own origin is always trusted (plan #6 L22).
+        if (origin != null && request.headers.contains(HttpHeaders.Cookie)) {
+          if (!request.headers.contains(HttpHeaders.Origin))
+              request.header(HttpHeaders.Origin, origin)
         }
         if (apiKey != null) request.header("X-API-Key", apiKey)
       }

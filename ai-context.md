@@ -13,4 +13,4 @@ targets jvm (JDK 21), android, iosArm64, iosSimulatorArm64, js, wasmJs.
 Edges: passkeys -> core; compose -> core + passkeys; fds -> compose + core + passkeys.
 Layering is guard-enforced (`.fediim/guards.json`); rules and locked decisions: `CONSTRAINTS.md`.
 Build: `./gradlew check`; shared build config: `build-logic/` (`betterauth.kmp.library`).
-`tests/contract-server/` is the Node better-auth server for the core `jvmTest` contract suite.
+`tests/contract-server/` is the Node better-auth server for the live contract suites of core and passkeys (`jvmTest`); both compile the shared harness in `tests/contract-harness/`.

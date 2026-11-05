@@ -26,6 +26,8 @@ kotlin {
       implementation(libs.kotlinx.coroutines.test)
       implementation(libs.multiplatform.settings.test)
     }
+    // The live-contract harness is shared with better-auth-passkeys (plan #6 L12).
+    jvmTest { kotlin.srcDir(rootProject.file("tests/contract-harness/kotlin")) }
   }
 }
 
