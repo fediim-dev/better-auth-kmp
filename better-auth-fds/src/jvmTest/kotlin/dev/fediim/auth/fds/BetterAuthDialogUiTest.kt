@@ -366,6 +366,9 @@ class BetterAuthDialogUiTest {
     val rig = FdsTestRig()
     setVmContent({ rig.viewModel(it) }) { BetterAuthDialog(it, { dismissed++ }) }
     onNodeWithTag(TAG_EMAIL).assertExists()
+    // BetterAuthDialog has its own socialProviders default (pins it, README quick start relies on
+    // it).
+    assertTrue(hasText("Continue with Google") && hasText("Continue with GitHub"))
     onNodeWithTag(TAG_EMAIL).requestFocus()
     onNodeWithTag(TAG_EMAIL).performKeyInput { pressKey(Key.Escape) }
     waitForIdle()
