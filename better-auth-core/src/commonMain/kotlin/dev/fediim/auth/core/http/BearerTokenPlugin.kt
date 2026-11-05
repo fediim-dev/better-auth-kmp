@@ -40,7 +40,7 @@ internal val BearerTokenPlugin =
           storage.token()?.let { request.header(HttpHeaders.Authorization, "Bearer $it") }
         }
         // better-auth rejects a cookie-bearing POST without a trusted Origin (CSRF check); the
-        // server's own origin is always trusted (plan #6 L22).
+        // baseUrl origin is trusted when it matches the server's baseURL or trustedOrigins (L22).
         if (origin != null && request.headers.contains(HttpHeaders.Cookie)) {
           if (!request.headers.contains(HttpHeaders.Origin))
               request.header(HttpHeaders.Origin, origin)

@@ -65,7 +65,7 @@ when (val outcome = client.signInEmail(request)) {
 - The sign-in response of a challenged account carries a `set-auth-token` for a session the server deletes; the SDK ignores it and stores no token until the second factor succeeds.
 - Not exposed: `trustDevice`, OTP send/verify, `disableSession`.
 - Browsers (js, wasmJs) cannot read `Set-Cookie` or set `Cookie`; the browser's own cookie jar carries the challenge. That works when the auth server is same-origin with the page, or with CORS credentials, `SameSite=None` and a `fetch` that includes credentials. Cross-origin setups are documented, not covered by the test suite.
-- The SDK adds `Origin: <baseUrl origin>` to the one request that replays a challenge cookie, because Better Auth rejects a cookie-bearing POST without a trusted origin; the server's own origin is always trusted.
+- The SDK adds `Origin: <baseUrl origin>` to the one request that replays a challenge cookie, because Better Auth rejects a cookie-bearing POST without a trusted origin; it is accepted when it equals the origin of the server's own `baseURL` or is listed in its `trustedOrigins`. Behind a reverse proxy or another public host, add the client's `baseUrl` origin to `trustedOrigins`, or the 2FA and passkey verify calls fail with 403 `INVALID_ORIGIN`.
 - On iOS the Darwin engine disables cookie storage by default, so the SDK's replay is the only cookie sent; runtime confirmation is tracked in #10.
 
 ### Social sign-in

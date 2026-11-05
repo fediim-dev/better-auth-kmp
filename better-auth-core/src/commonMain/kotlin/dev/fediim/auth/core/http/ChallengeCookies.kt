@@ -25,6 +25,9 @@ internal class ChallengeCookies(private val tokenStorage: AuthTokenStorage) {
   private val cookies = mutableMapOf<String, String>()
   private var twoFactorPending = false
 
+  /** Bumped whenever a two-factor challenge starts or is dropped, so a stale verify can tell. */
+  private var twoFactorGeneration = 0L
+
   /**
    * Stores the first `Set-Cookie` pair named `...<suffix>` found in [response] (also inside a
    * Darwin-folded header) as `name=value`. Returns whether one was stored.
@@ -74,6 +77,7 @@ internal class ChallengeCookies(private val tokenStorage: AuthTokenStorage) {
       if (tokenStorage.epoch() != epoch) return@withLock
       cookies.remove(TWO_FACTOR_COOKIE_SUFFIX)
       twoFactorPending = true
+      twoFactorGeneration++
     }
   }
 
@@ -82,13 +86,27 @@ internal class ChallengeCookies(private val tokenStorage: AuthTokenStorage) {
     mutex.withLock {
       cookies.remove(TWO_FACTOR_COOKIE_SUFFIX)
       twoFactorPending = false
+      twoFactorGeneration++
     }
   }
 
-  /** Forgets only the pending marker; the cookie is removed separately via [takeIfEquals]. */
-  suspend fun clearTwoFactorMarker() {
-    mutex.withLock { twoFactorPending = false }
+  /** The current two-factor generation and held cookie, read together. */
+  suspend fun twoFactorChallenge(): Pair<Long, String?> = mutex.withLock {
+    twoFactorGeneration to cookies[TWO_FACTOR_COOKIE_SUFFIX]
   }
+
+  /**
+   * Completes the two-factor challenge of [generation]: runs [store] and clears the pending marker
+   * under the lock, but only if no newer challenge started and nothing was cleared since; otherwise
+   * does nothing and returns false. The cookie is removed separately via [takeIfEquals].
+   */
+  suspend fun completeTwoFactorIf(generation: Long, store: suspend () -> Unit): Boolean =
+      mutex.withLock {
+        if (!twoFactorPending || twoFactorGeneration != generation) return@withLock false
+        store()
+        twoFactorPending = false
+        true
+      }
 
   suspend fun isTwoFactorPending(): Boolean = mutex.withLock { twoFactorPending }
 
@@ -97,6 +115,7 @@ internal class ChallengeCookies(private val tokenStorage: AuthTokenStorage) {
     mutex.withLock {
       cookies.clear()
       twoFactorPending = false
+      twoFactorGeneration++
     }
   }
 

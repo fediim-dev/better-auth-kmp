@@ -13,6 +13,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
@@ -23,8 +24,8 @@ import kotlinx.serialization.json.put
  * stores them.
  *
  * Enrolling: [enable] only prepares a secret; two-factor becomes active after a session-mode
- * [verifyTotp] with a code from it (the server then also rotates the session). [password] is
- * required for accounts with a password and may be null for accounts without one.
+ * [verifyTotp] with a code from it (the server then also rotates the session). The `password`
+ * parameters are required for accounts with a password and may be null for accounts without one.
  *
  * Signing in: after a [BetterAuthClient.signInEmail] answered with
  * [SignInResult.TwoFactorRequired], [verifyTotp] and [verifyBackupCode] run in challenge mode: no
@@ -68,7 +69,10 @@ public class TwoFactorApi internal constructor(private val client: BetterAuthCli
       ) { _, _ ->
       }
 
-  /** The `otpauth://` URI of the current secret. */
+  /**
+   * The `otpauth://` URI of the current secret. The URI contains the secret and the result is not
+   * redacted: never log or persist it.
+   */
   public suspend fun getTotpUri(password: String?): BetterAuthResult<String> =
       client.send(
           HttpMethod.Post,
@@ -86,7 +90,9 @@ public class TwoFactorApi internal constructor(private val client: BetterAuthCli
   public suspend fun verifyBackupCode(code: String): BetterAuthResult<AuthResponse> =
       verify("two-factor/verify-backup-code", code)
 
-  /** Replaces the backup codes and returns the new ones. */
+  /**
+   * Replaces the backup codes and returns the new ones (not redacted: never log or persist them).
+   */
   public suspend fun generateBackupCodes(password: String?): BetterAuthResult<List<String>> =
       client.send(
           HttpMethod.Post,
@@ -102,7 +108,7 @@ public class TwoFactorApi internal constructor(private val client: BetterAuthCli
     if (!cookies.isTwoFactorPending()) {
       return client.send(HttpMethod.Post, path, body) { _, text -> decodeAuthResponse(text) }
     }
-    val sent = cookies.peek(TWO_FACTOR_COOKIE_SUFFIX)
+    val (generation, sent) = cookies.twoFactorChallenge()
     val result =
         client.send(
             HttpMethod.Post,
@@ -115,12 +121,14 @@ public class TwoFactorApi internal constructor(private val client: BetterAuthCli
             },
         ) { response, text ->
           val parsed = decodeAuthResponse(text)
-          client.captureHeaderOrBodyToken(response, parsed.token)
+          // A newer sign-in (or signOut) since this challenge wins: its token is not overwritten.
+          cookies.completeTwoFactorIf(generation) {
+            client.captureHeaderOrBodyToken(response, parsed.token)
+          }
           parsed
         }
-    if (result is BetterAuthResult.Success) {
-      cookies.clearTwoFactorMarker()
-      if (sent != null) cookies.takeIfEquals(TWO_FACTOR_COOKIE_SUFFIX, sent)
+    if (result is BetterAuthResult.Success && sent != null) {
+      cookies.takeIfEquals(TWO_FACTOR_COOKIE_SUFFIX, sent)
     }
     return result
   }
@@ -128,8 +136,7 @@ public class TwoFactorApi internal constructor(private val client: BetterAuthCli
   private fun decodeAuthResponse(text: String): AuthResponse =
       json.decodeFromString(AuthResponse.serializer(), text)
 
-  private fun body(build: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit): String =
-      buildJsonObject(build).toString()
+  private fun body(build: JsonObjectBuilder.() -> Unit): String = buildJsonObject(build).toString()
 
   private fun JsonObject.string(key: String): String =
       json.decodeFromJsonElement(String.serializer(), requireKey(key))

@@ -8,6 +8,7 @@ import dev.fediim.auth.core.captureChallengeCookie
 import dev.fediim.auth.core.model.BetterAuthError
 import dev.fediim.auth.core.model.BetterAuthResult
 import dev.fediim.auth.core.model.SignInEmailRequest
+import dev.fediim.auth.core.takeChallengeCookie
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -207,9 +208,68 @@ class TwoFactorChallengeTest {
     rig.client.signOut()
     gate.complete(Unit)
     signingIn.join()
+    rig.preStore("tN")
     rig.client.twoFactor.verifyTotp("000000")
     assertNull(rig.cookieOf(rig.requests.lastIndex))
+    assertEquals("Bearer tN", rig.authOf(rig.requests.lastIndex))
     assertEquals(1L, rig.storage.epoch())
+  }
+
+  @Test
+  fun t3SignOutFencesAnInFlightChallengeCapture() = runTest {
+    val inFlight = CompletableDeferred<Unit>()
+    val gate = CompletableDeferred<Unit>()
+    val rig = TwoFactorRig {
+      inFlight.complete(Unit)
+      gate.await()
+      json("{}", cookies = listOf("better-auth.better-auth-passkey=late.p; Path=/"))
+    }
+    val capturing = launch {
+      rig.client.authRequest(HttpMethod.Get, "probe") { response, _ ->
+        rig.client.captureChallengeCookie(response, ".better-auth-passkey")
+      }
+    }
+    inFlight.await()
+    rig.client.signOut()
+    gate.complete(Unit)
+    capturing.join()
+    assertNull(rig.client.takeChallengeCookie(".better-auth-passkey"))
+  }
+
+  @Test
+  fun t3StaleVerifyDoesNotOverwriteANewerTwoFactorSignIn() = runTest {
+    val verifyInFlight = CompletableDeferred<Unit>()
+    val releaseVerify = CompletableDeferred<Unit>()
+    var signIns = 0
+    var verifies = 0
+    val rig = TwoFactorRig { request ->
+      if (request.url.encodedPath == SIGN_IN_PATH) {
+        signIns++
+        val cookie =
+            if (signIns == 1) "better-auth.two_factor=b.s" else "better-auth.two_factor=c.s"
+        json(TWO_FACTOR_BODY, cookies = listOf("$cookie; Path=/"))
+      } else {
+        verifies++
+        if (verifies == 1) {
+          verifyInFlight.complete(Unit)
+          releaseVerify.await()
+          json(verified, extra = listOf("set-auth-token" to "tokB"))
+        } else json(verified, extra = listOf("set-auth-token" to "tokC"))
+      }
+    }
+    rig.client.signInEmail(signIn)
+    val staleVerify = launch { rig.client.twoFactor.verifyTotp("111111") }
+    verifyInFlight.await()
+    rig.client.signInEmail(signIn)
+    releaseVerify.complete(Unit)
+    staleVerify.join()
+    assertNull(rig.storage.token())
+
+    rig.client.twoFactor.verifyTotp("222222")
+    val last = rig.requests.lastIndex
+    assertEquals("better-auth.two_factor=c.s", rig.cookieOf(last))
+    assertNull(rig.authOf(last))
+    assertEquals("tokC", rig.storage.token())
   }
 
   private suspend fun captureOf(cookies: List<String>, suffix: String): Boolean {

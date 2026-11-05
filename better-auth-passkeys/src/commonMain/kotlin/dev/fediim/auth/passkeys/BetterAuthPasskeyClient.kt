@@ -30,7 +30,9 @@ private const val FAILED = "PASSKEY_FAILED"
  *
  * The signed challenge cookie from an options call is kept in memory by [client] and replayed once,
  * on the matching verify call (CONSTRAINTS C5); browsers use their own cookie jar instead. The
- * session of [signInWithPasskey] is stored by [client] from `set-auth-token`.
+ * client holds one passkey challenge, so run one ceremony at a time per [client]: a second options
+ * call replaces the first challenge and the first verify then fails on the server. The session of
+ * [signInWithPasskey] is stored by [client] from `set-auth-token`.
  */
 public class BetterAuthPasskeyClient(
     private val client: BetterAuthClient,
