@@ -46,7 +46,9 @@ private fun BetterAuthResult<*>.failureText(): String? =
  * pending two-factor sign-in. The password, URI and backup codes are dropped when the composition
  * is disposed, including on an Android configuration change, by design (never in saved state); the
  * host app should set `FLAG_SECURE` or the platform equivalent if it needs screenshot protection.
- * Must be inside `FediimTheme`.
+ * The copy controls mark the clip sensitive on Android (hidden from clipboard previews on Android
+ * 13+); other platforms copy plain text; the clipboard is not cleared afterwards. Must be inside
+ * `FediimTheme`.
  */
 @Composable
 public fun TwoFactorSetupDialog(
@@ -63,6 +65,7 @@ public fun TwoFactorSetupDialog(
   var failure by remember { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
   var done by remember { mutableStateOf(false) }
+  val copySecret = rememberSecretCopy()
 
   FdsDialogFrame(onDismissRequest, modifier) {
     Column(
@@ -110,8 +113,20 @@ public fun TwoFactorSetupDialog(
             "Each backup code works once. They are not shown again.",
             BannerTone.Warning,
         )
-        CodeBlock(current.totpUri, "Authenticator URI", lineNumbers = false, wrap = true)
-        CodeBlock(current.backupCodes.joinToString("\n"), "Backup codes", lineNumbers = false)
+        val backupCodes = current.backupCodes.joinToString("\n")
+        CodeBlock(
+            current.totpUri,
+            "Authenticator URI",
+            lineNumbers = false,
+            wrap = true,
+            onCopy = { copySecret(current.totpUri) },
+        )
+        CodeBlock(
+            backupCodes,
+            "Backup codes",
+            lineNumbers = false,
+            onCopy = { copySecret(backupCodes) },
+        )
         TextField(
             value = code,
             onValueChange = { code = it },

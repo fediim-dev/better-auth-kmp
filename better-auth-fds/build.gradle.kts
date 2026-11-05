@@ -9,6 +9,10 @@ apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 apply(plugin = "org.jetbrains.compose")
 
 kotlin {
+  androidLibrary {
+    withDeviceTest { instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+  }
+
   // CMP's browser-test check demands an executable binary so webpack bundles Skiko (CMP-4906).
   js { binaries.executable() }
   @OptIn(ExperimentalWasmDsl::class) wasmJs { binaries.executable() }
@@ -19,6 +23,10 @@ kotlin {
       api(project(":better-auth-core"))
       api(project(":better-auth-passkeys"))
       api(libs.fds.components)
+    }
+    getByName("androidDeviceTest").dependencies {
+      implementation(libs.androidx.test.runner)
+      implementation(libs.androidx.test.ext.junit)
     }
     jvmTest.dependencies {
       implementation(libs.compose.ui.test.junit4)
@@ -42,3 +50,9 @@ tasks.named<Test>("jvmTest") {
       .optional()
       .withPathSensitivity(PathSensitivity.RELATIVE)
 }
+
+// CMP 1.12.2 registers this task for the device-test variant without an outputDirectory, which
+// fails task validation; the device test uses no Compose resources.
+tasks
+    .matching { it.name == "copyAndroidDeviceTestComposeResourcesToAndroidAssets" }
+    .configureEach { enabled = false }
