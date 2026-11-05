@@ -154,7 +154,12 @@ FediimTheme {
   val client = remember { BetterAuthClient(config, storage, socialAuthLauncher = launcher) }
   val auth = remember { BetterAuthViewModel(client, scope, passkeyClient) }
   val organizations = remember { OrganizationViewModel(client, scope) }
-  DisposableEffect(auth) { onDispose { auth.close() } }
+  DisposableEffect(auth, organizations) {
+    onDispose {
+      auth.close()
+      organizations.close()
+    }
+  }
 
   val state by auth.state.collectAsState()
   if (!state.isSignedIn) {
@@ -162,7 +167,7 @@ FediimTheme {
       auth,
       onDismissRequest = { /* hide the dialog */ },
       passkeyCapability = authenticator.capability,
-      socialProviders = emptyList(), // the default ["google", "github"] needs a `socialAuthLauncher`
+      // default providers need the `socialAuthLauncher` above; pass `socialProviders = emptyList()` if the client has none
     )
   } else {
     OrganizationSwitcher(organizations, currentUserId = state.user?.id)
@@ -175,7 +180,9 @@ FediimTheme {
 - Social buttons call `SignInSocial`, which fails with `UNEXPECTED` when the client has no `socialAuthLauncher`: pass `socialProviders = emptyList()` then.
 - The password stays in composition memory (never saved state); `ApiKeyManagerDialog` drops the one-time secret when it leaves composition.
 - Labels are English only. FDS 0.1.4 has no icon set, so buttons and banners are text-only.
-- Consumers also need the FDS repository `https://maven.pkg.github.com/fediim-dev/fediim-design-system` (same `gpr.user`/`gpr.key` credentials) and the Compose compiler plugin; the module itself resolves FDS 0.1.4-SNAPSHOT from `mavenLocal()` in this repo (`settings.gradle.kts`).
+- Consumers also need the FDS repository `https://maven.pkg.github.com/fediim-dev/fediim-design-system` (same `gpr.user`/`gpr.key` credentials) and the Compose compiler plugin; until FDS 0.1.4-SNAPSHOT is republished to GitHub Packages (it returns 404 today, plan #8 L29), consumers can only resolve it from `mavenLocal()`.
+- This module's own build resolves FDS from `mavenLocal()` first (`settings.gradle.kts`); remove that before any release.
+- Secrets (password, TOTP URI and backup codes, a new API key) live only in composition memory and are dropped when the composition is disposed, including on an Android configuration change, by design (they are never in saved state). Set `FLAG_SECURE` or the platform equivalent in the host app if you need screenshot protection.
 - Screenshot tests (`FdsScreenshotTest`, Roborazzi) verify 12 goldens in `better-auth-fds/screenshots/` on macOS only; re-record with `./gradlew :better-auth-fds:jvmTest -Proborazzi.test.record=true`.
 
 ## Consuming from GitHub Packages

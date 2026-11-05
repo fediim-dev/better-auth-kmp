@@ -43,7 +43,10 @@ private fun BetterAuthResult<*>.failureText(): String? =
  * called once on success. A failure keeps the step and shows the error. Continue and Verify are
  * disabled while their request runs, and Verify stays disabled after success. A blank password is
  * sent as null (accounts without a password). There is no QR code. Call it while signed in with no
- * pending two-factor sign-in. Must be inside `FediimTheme`.
+ * pending two-factor sign-in. The password, URI and backup codes are dropped when the composition
+ * is disposed, including on an Android configuration change, by design (never in saved state); the
+ * host app should set `FLAG_SECURE` or the platform equivalent if it needs screenshot protection.
+ * Must be inside `FediimTheme`.
  */
 @Composable
 public fun TwoFactorSetupDialog(
@@ -86,6 +89,7 @@ public fun TwoFactorSetupDialog(
         )
         Button(
             onClick = {
+              if (busy) return@Button
               busy = true
               failure = null
               scope.launch {
@@ -117,6 +121,7 @@ public fun TwoFactorSetupDialog(
         )
         Button(
             onClick = {
+              if (busy) return@Button
               busy = true
               failure = null
               scope.launch {

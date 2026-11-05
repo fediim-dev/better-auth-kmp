@@ -252,6 +252,13 @@ class BetterAuthDialogUiTest {
   }
 
   @Test
+  fun defaultProvidersAreGoogleAndGitHub() = runDesktopTest {
+    val rig = FdsTestRig()
+    setVmContent({ rig.viewModel(it) }) { BetterAuthPanel(it) }
+    assertTrue(hasText("Continue with Google") && hasText("Continue with GitHub"))
+  }
+
+  @Test
   fun googleButtonSendsGoogle() = runDesktopTest {
     val rig = FdsTestRig()
     rig.on("sign-in/social", Reply(social))

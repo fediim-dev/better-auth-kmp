@@ -89,6 +89,21 @@ class AccountComponentsUiTest {
   }
 
   @Test
+  fun failedSwitchKeepsThePreviousOrganization() = runDesktopTest {
+    val rig = orgRig("uA" to "admin")
+    rig.on("organization/set-active", Reply("""{"code":"FORBIDDEN"}""", 403))
+    val vm = switcher(rig, "uA")
+    until("loaded") { hasText("Acme") }
+    onNodeWithTag(TAG_ORG_TRIGGER).performClick()
+    until("menu") { hasText("Beta") }
+    onNodeWithText("Beta").performClick()
+    until("failed") { vm.state.value.error?.code == "FORBIDDEN" && !vm.state.value.isLoading }
+    assertEquals(1, rig.to("organization/set-active").size)
+    until("closed") { !hasText("Beta") }
+    assertTrue(text(TAG_ORG_TRIGGER).contains("Acme"))
+  }
+
+  @Test
   fun switcherWithoutOrganizationsSaysSo() = runDesktopTest {
     val rig = FdsTestRig()
     rig.on("organization/list", Reply("[]"))
@@ -155,6 +170,22 @@ class AccountComponentsUiTest {
     onNodeWithText("Create key").performClick()
     until("request") { rig.to("api-key/create").size == 1 }
     assertEquals("{}", rig.to("api-key/create").single().body)
+  }
+
+  @Test
+  fun createIsDisabledWhileTheSecretShowsUntilDone() = runDesktopTest {
+    val rig = FdsTestRig()
+    rig.on("api-key/list", listK1)
+    rig.on("api-key/create", created("raw-secret-DDDD", "k4", "x"))
+    keyDialog(rig)
+    until("row") { hasText("ci") }
+    onNodeWithText("Create key").assertIsEnabled()
+    onNodeWithText("Create key").performClick()
+    until("secret") { hasTag(TAG_KEY_SECRET) }
+    onNodeWithText("Create key").assertIsNotEnabled()
+    onNodeWithText("Done").performClick()
+    until("hidden") { !hasTag(TAG_KEY_SECRET) }
+    onNodeWithText("Create key").assertIsEnabled()
   }
 
   @Test
@@ -307,6 +338,28 @@ class AccountComponentsUiTest {
     onNodeWithText("Continue").performClick()
     until("request") { rig.to("two-factor/enable").size == 1 }
     assertEquals("""{"issuer":"Acme"}""", rig.to("two-factor/enable").single().body)
+  }
+
+  @Test
+  fun verifyIsSentOnceWhileRunning() = runDesktopTest {
+    val rig = FdsTestRig()
+    rig.on("two-factor/enable", enrollment)
+    rig.on("two-factor/verify-totp", Reply(TOKEN_REPLY))
+    val gate = rig.gate("two-factor/verify-totp")
+    var enabled = 0
+    setup(rig) { enabled++ }
+    onNodeWithText("Continue").performClick()
+    until("enrollment") { hasTag(TAG_SETUP_CODE) }
+    type(TAG_SETUP_CODE, "112233")
+    onNodeWithText("Verify").performClick()
+    until("request") { rig.to("two-factor/verify-totp").size == 1 }
+    onNodeWithText("Verify").assertIsNotEnabled()
+    onNodeWithText("Verify").performClick()
+    waitForIdle()
+    assertEquals(1, rig.to("two-factor/verify-totp").size)
+    gate.complete(Unit)
+    until("enabled") { enabled == 1 }
+    assertEquals(1, rig.to("two-factor/verify-totp").size)
   }
 
   @Test

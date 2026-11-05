@@ -38,11 +38,14 @@ internal const val TAG_REVOKE_PREFIX = "fds.key.revoke."
 /**
  * Dispatches `Load` each time it enters composition and lists the keys (name or id, and `start`).
  * "Create key" dispatches `Create` with the trimmed name, or none when blank, and is disabled while
- * a request runs. The new secret shows once in a Warning banner with a copyable code block until
- * "Done" (`DismissCreatedKey`) or until the dialog leaves composition (also `DismissCreatedKey`).
- * "Revoke" asks a destructive confirmation, then dispatches `Revoke(id)`; it is disabled while a
- * request runs. Failures show a Critical banner with `message ?: code`. "Close" and Esc call
- * [onDismissRequest]. Must be inside `FediimTheme`.
+ * a request runs or a new secret is shown (press Done first). The new secret shows once in a
+ * Warning banner with a copyable code block until "Done" (`DismissCreatedKey`) or until the dialog
+ * leaves composition (also `DismissCreatedKey`). "Revoke" asks a destructive confirmation, then
+ * dispatches `Revoke(id)`; it is disabled while a request runs. Failures show a Critical banner
+ * with `message ?: code`. "Close" and Esc call [onDismissRequest]. The secret is dropped when the
+ * composition is disposed, including on an Android configuration change, by design (never in saved
+ * state); the host app should set `FLAG_SECURE` or the platform equivalent if it needs screenshot
+ * protection. Must be inside `FediimTheme`.
  */
 @Composable
 public fun ApiKeyManagerDialog(
@@ -130,7 +133,7 @@ internal fun ApiKeyManagerContent(
         },
         variant = ButtonVariant.Primary,
         modifier = Modifier.fillMaxWidth(),
-        enabled = !state.isLoading,
+        enabled = !state.isLoading && state.createdKey == null,
         text = "Create key",
     )
     Button(

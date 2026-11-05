@@ -149,7 +149,8 @@ public fun BetterAuthDialog(
  * `SignInSocial` with [socialCallbackUrl]; [passkeyCapability] decides the passkey button as in
  * [PasskeySignInButton]. Every action is disabled while `isLoading` or `isLockedOut`. A lockout
  * shows a Warning banner with the seconds left; `error` shows a Critical banner with `message ?:
- * code`. It never collects `viewModel.effects`.
+ * code`. It never collects `viewModel.effects`. [socialCallbackUrl] must be an origin the server
+ * trusts; never pass a user-controlled value.
  */
 @Composable
 public fun BetterAuthPanel(
