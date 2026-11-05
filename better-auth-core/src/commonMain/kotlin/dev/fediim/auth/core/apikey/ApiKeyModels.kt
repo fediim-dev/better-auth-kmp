@@ -55,11 +55,8 @@ public data class ApiKeyRecord(
 
 /**
  * Result of `api-key/create`: the one-time plaintext [key] secret and the stored [record]. The
- * server never returns [key] again; [toString] omits it.
- */
-/**
- * Only [toString] is redacted; [key] remains in `copy`/`componentN`/`equals`, so never serialize or
- * persist this object.
+ * server never returns [key] again; [toString] omits it. Only [toString] is redacted; [key] remains
+ * in `copy`/`componentN`/`equals`, so never serialize or persist this object.
  */
 public data class CreatedApiKey(val key: String, val record: ApiKeyRecord) {
   override fun toString(): String = "CreatedApiKey(record=$record)"
