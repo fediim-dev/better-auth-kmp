@@ -94,6 +94,32 @@ class JvmLoopbackSocialAuthLauncherTest {
   }
 
   @Test
+  fun stalledConnectionDoesNotBlockTheCallback() = runBlocking {
+    val flow = start()
+    val port = URI(flow.receiver).port
+    withContext(Dispatchers.IO) {
+      Socket().use { stalled ->
+        stalled.connect(InetSocketAddress("127.0.0.1", port), 2000)
+        stalled.getOutputStream().apply {
+          write("GET /auth".toByteArray())
+          flush()
+        }
+        val response =
+            http.send(
+                HttpRequest.newBuilder(URI("${flow.receiver}&ott=o"))
+                    .timeout(java.time.Duration.ofSeconds(5))
+                    .GET()
+                    .build(),
+                HttpResponse.BodyHandlers.ofString(),
+            )
+        assertEquals(200, response.statusCode())
+      }
+    }
+    assertEquals(SocialCallback.OneTimeToken("o"), withTimeout(10.seconds) { flow.result.await() })
+    assertPortFreed(flow.receiver)
+  }
+
+  @Test
   fun wrongStateWrongPathAndMethodKeepWaiting() = runBlocking {
     val flow = start()
     val bad =

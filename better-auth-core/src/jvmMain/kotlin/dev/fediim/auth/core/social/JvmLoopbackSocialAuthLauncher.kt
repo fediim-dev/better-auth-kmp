@@ -21,10 +21,11 @@ import kotlinx.coroutines.withTimeoutOrNull
  *
  * Requests with a wrong path (404), method (405), state or missing token (400) get an empty answer
  * that never echoes the request, and the launcher keeps waiting, so a local process cannot abort a
- * flow; each request runs on its own thread, so a stalled connection does not delay the real
- * callback. The first valid callback gets a static page, then completes the flow. After [timeout]
- * the result is [SocialCallback.Error] `timeout`. The port is released before [launch] returns or
- * throws, also on cancellation; exceptions from [openBrowser] or `authorize` propagate.
+ * flow; requests are handled on a pool of four threads, so up to three stalled local connections do
+ * not delay the real callback. The first valid callback gets a static page, then completes the
+ * flow. After [timeout] the result is [SocialCallback.Error] `timeout`. The port is released before
+ * [launch] returns or throws, also on cancellation; exceptions from [openBrowser] or `authorize`
+ * propagate.
  *
  * The server must trust and allow the receiver `http://127.0.0.1:<any port>/auth/callback`.
  */
@@ -39,7 +40,7 @@ public class JvmLoopbackSocialAuthLauncher(
   ): SocialCallback {
     val result = CompletableDeferred<SocialCallback>()
     val server = HttpServer.create(InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0)
-    val executor: ExecutorService = Executors.newCachedThreadPool()
+    val executor: ExecutorService = Executors.newFixedThreadPool(4)
     server.executor = executor
     try {
       server.createContext("/") { exchange -> handle(exchange, state, result) }
