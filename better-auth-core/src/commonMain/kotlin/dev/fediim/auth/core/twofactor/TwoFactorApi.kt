@@ -33,9 +33,12 @@ import kotlinx.serialization.json.put
  * challenge cookie captured at sign-in is sent as `Cookie` when one was captured (browsers use
  * their own cookie jar, which works same-origin), and the new session token is stored from
  * `set-auth-token`, else the body. A wrong code keeps the challenge (the server allows 5 attempts
- * and 600 s); success, the next [BetterAuthClient.signInEmail] or `signOut` end it. The challenge
- * lives in memory only: an abandoned one stays pending until the next sign-in or sign-out, and a
- * session-mode [verifyTotp] (for example during [enable]) fails in that time.
+ * and 600 s); success, the next [BetterAuthClient.signInEmail] or `signOut` end it. A verify that
+ * completes after a newer [BetterAuthClient.signInEmail] or `signOut` still returns its result but
+ * stores no token and leaves the newer sign-in or challenge in place, so do not treat that
+ * `Success` as signed in; confirm with [BetterAuthClient.getSession]. The challenge lives in memory
+ * only: an abandoned one stays pending until the next sign-in or sign-out, and a session-mode
+ * [verifyTotp] (for example during [enable]) fails in that time.
  *
  * Without a pending challenge both calls run in session mode: Bearer is sent and only a rotated
  * `set-auth-token` is stored.

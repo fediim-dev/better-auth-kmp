@@ -272,6 +272,33 @@ class TwoFactorChallengeTest {
     assertEquals("tokC", rig.storage.token())
   }
 
+  @Test
+  fun t3StaleVerifyDoesNotOverwriteANewerPlainSignIn() = runTest {
+    val verifyInFlight = CompletableDeferred<Unit>()
+    val releaseVerify = CompletableDeferred<Unit>()
+    var signIns = 0
+    val rig = TwoFactorRig { request ->
+      if (request.url.encodedPath == SIGN_IN_PATH) {
+        signIns++
+        if (signIns == 1) {
+          json(TWO_FACTOR_BODY, cookies = listOf("better-auth.two_factor=b.s; Path=/"))
+        } else json(verified, extra = listOf("set-auth-token" to "tokD"))
+      } else {
+        verifyInFlight.complete(Unit)
+        releaseVerify.await()
+        json(verified, extra = listOf("set-auth-token" to "tokB"))
+      }
+    }
+    rig.client.signInEmail(signIn)
+    val staleVerify = launch { rig.client.twoFactor.verifyTotp("111111") }
+    verifyInFlight.await()
+    rig.client.signInEmail(signIn)
+    assertEquals("tokD", rig.storage.token())
+    releaseVerify.complete(Unit)
+    staleVerify.join()
+    assertEquals("tokD", rig.storage.token())
+  }
+
   private suspend fun captureOf(cookies: List<String>, suffix: String): Boolean {
     val probe = TwoFactorRig { json("{}", cookies = cookies) }
     val result =
