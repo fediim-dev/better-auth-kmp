@@ -19,8 +19,10 @@ dependencyResolutionManagement {
     // exclusiveContent: dev.fediim.fds resolves only from this repo, never from
     // google/mavenCentral.
     exclusiveContent {
-      forRepository {
-        maven {
+      forRepositories(
+          // L29: 0.1.4-SNAPSHOT is not served by GitHub Packages (404); it comes from mavenLocal.
+          mavenLocal(),
+          maven {
           url = uri("https://maven.pkg.github.com/fediim-dev/fediim-design-system")
           credentials {
             username =
@@ -34,8 +36,8 @@ dependencyResolutionManagement {
                     .orElse(providers.environmentVariable("GITHUB_TOKEN"))
                     .orNull
           }
-        }
-      }
+        },
+      )
       filter { includeGroup("dev.fediim.fds") }
     }
   }
