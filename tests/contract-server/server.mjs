@@ -137,7 +137,7 @@ const options = {
     organization(),
     twoFactor(),
     passkey({ rpID: "localhost", origin: baseURL }),
-    apiKey(),
+    apiKey({ enableMetadata: true, enableSessionForAPIKeys: true }),
   ],
 };
 const { runMigrations } = await getMigrations(options);
