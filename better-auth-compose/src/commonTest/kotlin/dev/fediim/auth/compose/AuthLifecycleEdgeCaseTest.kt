@@ -6,6 +6,11 @@ import dev.fediim.auth.compose.AuthUiIntent.EmailChanged
 import dev.fediim.auth.compose.AuthUiIntent.Logout
 import dev.fediim.auth.compose.AuthUiIntent.PasswordChanged
 import dev.fediim.auth.compose.AuthUiIntent.SubmitAuth
+import dev.fediim.auth.core.BetterAuthClient
+import dev.fediim.auth.core.BetterAuthConfig
+import dev.fediim.auth.core.storage.AuthTokenStorage
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -52,5 +57,40 @@ class AuthLifecycleEdgeCaseTest {
     runCurrent()
     assertEquals("Bearer t1", rig.authOf(rig.reqs("sign-out").single()))
     assertTrue("sign-out 200" in rig.completed)
+  }
+
+  @Test
+  fun logoutWithFailingStorageResetsStateAndReportsUnexpected() = runTest {
+    val broken =
+        object : AuthTokenStorage {
+          override suspend fun epoch(): Long = 0
+
+          override suspend fun token(): String? = "tS"
+
+          override suspend fun writeTokenIfEpoch(expectedEpoch: Long, token: String) = false
+
+          override suspend fun clear() = throw IllegalStateException("disk")
+        }
+    var sent = 0
+    var cacheCalls = 0
+    val client =
+        BetterAuthClient(
+            BetterAuthConfig("https://example.com"),
+            broken,
+            MockEngine {
+              sent++
+              respond("{}")
+            },
+        )
+    val vm = BetterAuthViewModel(client, backgroundScope, null) { cacheCalls++ }
+    val effects = collectEffects(vm)
+    vm.dispatch(Logout)
+    runCurrent()
+    assertFalse(vm.state.value.isSignedIn)
+    assertFalse(vm.state.value.isLoading)
+    assertEquals(AuthUiErrorCodes.UNEXPECTED, vm.state.value.error?.code)
+    assertTrue(effects.none { it is AuthUiEffect.SignedOut })
+    assertEquals(0, cacheCalls)
+    assertEquals(0, sent)
   }
 }

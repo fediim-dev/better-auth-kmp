@@ -2,6 +2,7 @@ package dev.fediim.auth.core
 
 import com.russhwolf.settings.MapSettings
 import dev.fediim.auth.core.model.BetterAuthResult
+import dev.fediim.auth.core.storage.AuthTokenStorage
 import dev.fediim.auth.core.storage.SettingsAuthTokenStorage
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -72,5 +73,35 @@ class SignOutCallbackTest {
         assertEquals("Bearer t9", requests.single().headers[HttpHeaders.Authorization])
         assertNull(storage.token())
         assertEquals(1, storage.epoch())
+      }
+
+  @Test
+  fun storageFailureSkipsTheCallbackAndTheServerCall() =
+      kotlinx.coroutines.test.runTest {
+        val broken =
+            object : AuthTokenStorage {
+              override suspend fun epoch(): Long = 0
+
+              override suspend fun token(): String? = "tS"
+
+              override suspend fun writeTokenIfEpoch(expectedEpoch: Long, token: String) = false
+
+              override suspend fun clear() = throw IllegalStateException("disk")
+            }
+        val sent = mutableListOf<HttpRequestData>()
+        val brokenClient =
+            BetterAuthClient(
+                BetterAuthConfig("https://example.com"),
+                broken,
+                MockEngine { request ->
+                  sent += request
+                  respond("{}")
+                },
+            )
+        var calls = 0
+        val thrown = assertFailsWith<IllegalStateException> { brokenClient.signOut { calls++ } }
+        assertEquals("disk", thrown.message)
+        assertEquals(0, calls)
+        assertEquals(0, sent.size)
       }
 }

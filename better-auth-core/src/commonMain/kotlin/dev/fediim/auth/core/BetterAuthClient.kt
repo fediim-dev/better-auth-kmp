@@ -152,11 +152,11 @@ public class BetterAuthClient(
    * between the read and the clear, the server call revokes the token that was read; the rotated
    * token is discarded locally but not revoked on the server.
    *
-   * If [onLocalStateCleared] throws, the server call is still attempted (its result is then lost)
-   * and the exception is rethrown afterwards, unchanged — a `CancellationException` the callback
-   * throws itself (for example from `withTimeout`) is rethrown as is, so catch it in the callback
-   * if the caller must not read it as its own cancellation. When the calling coroutine is cancelled
-   * the server call is cancelled with it; callers that must revoke wrap this call in
+   * If [onLocalStateCleared] throws an `Exception`, the server call is still attempted (its result
+   * is then lost) and the exception is rethrown afterwards, unchanged — a `CancellationException`
+   * the callback throws itself (for example from `withTimeout`) is rethrown as is, so catch it in
+   * the callback if the caller must not read it as its own cancellation. When the calling coroutine
+   * is cancelled the server call is cancelled with it; callers that must revoke wrap this call in
    * `NonCancellable`. If reading or clearing storage throws, neither the callback nor the server
    * call runs.
    */
