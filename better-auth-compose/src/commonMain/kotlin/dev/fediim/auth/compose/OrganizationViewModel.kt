@@ -56,6 +56,10 @@ public sealed interface OrganizationUiIntent {
  * response to arrive wins; [OrganizationUiIntent.Clear] cancels requests still running. Member
  * operations pass the active organization id and, on success, reload the active organization. After
  * [close], [dispatch] does nothing.
+ *
+ * Not tied to the session: send [OrganizationUiIntent.Clear] from the `onClearUserCache` callback
+ * of [BetterAuthViewModel], or the previous user's organizations stay visible and a late response
+ * to their request can fill the next user's screen.
  */
 public class OrganizationViewModel(private val client: BetterAuthClient, scope: CoroutineScope) :
     AutoCloseable {

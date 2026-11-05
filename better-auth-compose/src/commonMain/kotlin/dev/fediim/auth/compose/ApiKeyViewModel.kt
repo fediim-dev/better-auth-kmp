@@ -54,6 +54,10 @@ public sealed interface ApiKeyUiIntent {
  * Headless state holder for API keys over `client.apiKeys`. [dispatch] is not thread-safe: call it
  * on [scope]'s single thread. There is no single-flight guard, so the last response to arrive wins;
  * [ApiKeyUiIntent.Clear] cancels requests still running. After [close], [dispatch] does nothing.
+ *
+ * Not tied to the session: send [ApiKeyUiIntent.Clear] from the `onClearUserCache` callback of
+ * [BetterAuthViewModel], or the previous user's keys (and a raw [ApiKeyUiState.createdKey]) stay
+ * visible and a late response to their request can fill the next user's screen.
  */
 public class ApiKeyViewModel(private val client: BetterAuthClient, scope: CoroutineScope) :
     AutoCloseable {

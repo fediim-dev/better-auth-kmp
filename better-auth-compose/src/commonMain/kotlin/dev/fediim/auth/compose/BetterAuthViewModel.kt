@@ -50,10 +50,11 @@ import kotlinx.coroutines.withContext
  * sign-out.
  *
  * Logout cancels the running attempt, resets [state] at once (a lockout countdown is kept), and
- * never restores a session if the revoke fails. A revoke started by an attempt or by Logout is
- * never cancelled by Logout or [close]; a hung revoke therefore outlives [close] until the HTTP
- * client times out. Local state is cleared inside [dispatch] when the storage never suspends, as
- * `SettingsAuthTokenStorage` does.
+ * never restores a session if the revoke fails. If the token storage itself throws, the state is
+ * still reset, the error is `UNEXPECTED`, and the token may remain stored. A revoke started by an
+ * attempt or by Logout is never cancelled by Logout or [close]; a hung revoke therefore outlives
+ * [close] until the HTTP client times out. Local state is cleared inside [dispatch] when the
+ * storage never suspends, as `SettingsAuthTokenStorage` does.
  *
  * [effects] supports one collector, buffers 64 effects and drops the oldest, and never suspends the
  * view model. After [close], [dispatch] does nothing.

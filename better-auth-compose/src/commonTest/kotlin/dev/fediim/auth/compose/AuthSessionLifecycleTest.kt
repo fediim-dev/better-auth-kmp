@@ -137,12 +137,17 @@ class AuthSessionLifecycleTest {
   @Test
   fun t5StaleAttemptCannotTouchANewerOne() = runTest {
     val (rig, vm) = setup()
+    val effects = collectEffects(vm)
     rig.seed("tA")
     rig.on("sign-in/email", tokenReply("tN"))
+    rig.on("sign-out", Reply(OK, HttpStatusCode.InternalServerError))
     val signOutGate = rig.gate("sign-out")
     vm.dispatch(SubmitAuth)
     runCurrent()
     vm.dispatch(Logout)
+    // Logout found no token and finished inside dispatch: its callback ran, no second request.
+    assertEquals(2, rig.cacheClears)
+    assertEquals(1, rig.reqs("sign-out").size)
     assertFalse(vm.state.value.isLoading)
     val signInGate = rig.gate("sign-in/email")
     vm.signIn("new@b.com")
@@ -159,6 +164,10 @@ class AuthSessionLifecycleTest {
     assertEquals(1, bodies.size)
     assertTrue(""""email":"new@b.com"""" in bodies.single())
     assertTrue(vm.state.value.isSignedIn)
+    // The stale attempt's failed revoke (500) emitted nothing.
+    assertTrue(effects.none { it is AuthUiEffect.SessionRevocationFailed })
+    assertEquals(listOf(AuthUiEffect.SignedOut), effects.filterIsInstance<AuthUiEffect.SignedOut>())
+    assertEquals(1, effects.filterIsInstance<AuthUiEffect.SignedIn>().size)
   }
 
   private suspend fun TestScope.restored():
