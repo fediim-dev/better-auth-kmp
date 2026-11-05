@@ -32,7 +32,7 @@ intake decisions quoted from their source issue.
 - **Rationale:** One API surface for all supported platforms.
 
 ### C2 · Maven Coordinates (#1) [irreversible]
-- **Constraint:** Group `dev.fediim.auth` with modules `better-auth-core`, `better-auth-passkeys`, `better-auth-compose`, and `better-auth-fds`; published to `maven.pkg.github.com/fediim-dev/better-auth-kmp` and `mavenLocal`.
+- **Constraint:** Group `dev.fediim.auth` with modules `better-auth-core`, `better-auth-passkeys`, `better-auth-compose`, and `better-auth-fds`. (Publish destinations — `maven.pkg.github.com/fediim-dev/better-auth-kmp` and `mavenLocal` — are part of #1's `[reversible]` toolchain & publishing decision.)
 - **Rationale:** Published coordinates cannot change without breaking consumers.
 
 ### C3 · Module Layering & Dependency Policy (#1, #7)
@@ -44,7 +44,7 @@ intake decisions quoted from their source issue.
 - **Rationale:** Servers add app-specific fields; the SDK must not drop them.
 
 ### C5 · Auth Transport: Bearer (#2, #3) [irreversible]
-- **Constraint:** #2 Auth & transport: uniform `Authorization: Bearer <token>` across all targets, token captured from Better Auth's `set-auth-token` response header (fallback to response body `token`), optional `X-API-Key` header. #3 Data model & transport: Bearer via set-auth-token + additionalFields round-tripping, verified against a real Node better-auth server.
+- **Constraint:** #2 Auth & transport: uniform `Authorization: Bearer <token>` across all targets, token captured from Better Auth's `set-auth-token` response header (fallback to response body `token`), optional `X-API-Key` header. #3 Data model & transport: `Authorization: Bearer <token>` via `set-auth-token` header + `additionalFields: JsonObject` round-tripping.
 - **Rationale:** Cookies are unavailable on most targets; one transport everywhere.
 
 ### C6 · Platform OAuth Boundaries (#4) [irreversible]
@@ -56,5 +56,5 @@ intake decisions quoted from their source issue.
 - **Rationale:** Passkeys stay out of core; unsupported platforms fail explicitly.
 
 ### C8 · Two-Factor in Core (#6) [irreversible]
-- **Constraint:** 2FA/TOTP lives in better-auth-core on all 5 targets, including twoFactorRedirect handling during signInEmail.
+- **Constraint:** 2FA/TOTP lives in better-auth-core on all 5 targets, including detecting `twoFactorRedirect: true` during `signInEmail` and transitioning to TOTP/backup-code verification before issuing the final session token.
 - **Rationale:** 2FA is part of the base sign-in flow, not an optional module.
