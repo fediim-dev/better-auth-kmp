@@ -12,6 +12,24 @@ Group `dev.fediim.auth`, version `0.1.0-SNAPSHOT`; targets jvm, android, iosArm6
 | `dev.fediim.auth:better-auth-compose` | core, passkeys |
 | `dev.fediim.auth:better-auth-fds` | compose, core, passkeys |
 
+## better-auth-core
+
+```kotlin
+val client = BetterAuthClient(
+  BetterAuthConfig("https://auth.example.com"),
+  SettingsAuthTokenStorage(settings), // a multiplatform-settings `Settings`; one instance per store
+)
+when (val result = client.signInEmail(SignInEmailRequest("a@b.com", "password"))) {
+  is BetterAuthResult.Success -> result.value.user
+  is BetterAuthResult.Failure, is BetterAuthResult.RateLimited, is BetterAuthResult.NetworkError -> Unit
+}
+```
+
+- `baseUrl` must be `https`; `http` is accepted only for `localhost`, `127.0.0.1`, `::1`, or with `allowInsecureHttpForTesting = true`. Anything else throws `IllegalArgumentException`.
+- Requests send `Authorization: Bearer <token>`; the token is read from the `set-auth-token` response header (body `token` as fallback for sign-in/sign-up) and is dropped if `signOut()` ran meanwhile. See CONSTRAINTS C5.
+- Server fields the models do not declare are kept in `additionalFields` (CONSTRAINTS C4).
+- `SettingsAuthTokenStorage` stores the token as plaintext in the platform settings store; implement `AuthTokenStorage` for keystore-backed storage.
+
 ## Consuming from GitHub Packages
 
 ```kotlin
