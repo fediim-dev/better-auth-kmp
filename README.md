@@ -10,7 +10,7 @@ Group `dev.fediim.auth`, version `0.1.0-SNAPSHOT`; targets jvm, android, iosArm6
 | `dev.fediim.auth:better-auth-core` | none |
 | `dev.fediim.auth:better-auth-passkeys` | core |
 | `dev.fediim.auth:better-auth-compose` | core, passkeys, Compose Runtime |
-| `dev.fediim.auth:better-auth-fds` | compose, core, passkeys |
+| `dev.fediim.auth:better-auth-fds` | compose, core, passkeys, FDS (`dev.fediim.fds` 0.1.4-SNAPSHOT) |
 
 ## better-auth-core
 
@@ -143,6 +143,40 @@ auth.dispatch(AuthUiIntent.SubmitAuth)
 - **Lockout.** A 429 with a positive `Retry-After` sets `isLockedOut` and counts `lockoutSecondsRemaining` down on `scope`'s clock. It blocks `SubmitAuth`, `SubmitTwoFactor`, `SignInSocial` and `SignInPasskey` (not `RestoreSession` or `Logout`) and survives Logout.
 - `OrganizationViewModel` and `ApiKeyViewModel` have no single-flight guard (the last response wins); send `Clear` from `onClearUserCache` so a new user never sees the old user's lists or the one-time `createdKey`.
 - iOS compiles but the module's tests run on jvm, js, wasmJs and the Android host only; the iOS runtime check is tracked in #10.
+
+## better-auth-fds
+
+Compose UI built only from [FDS](https://github.com/fediim-dev/fediim-design-system) components and tokens over the compose view models. Everything must sit inside `FediimTheme { }` (the components read its tokens and never wrap their own theme).
+
+```kotlin
+FediimTheme {
+  val scope = rememberCoroutineScope()
+  val client = remember { BetterAuthClient(config, storage, socialAuthLauncher = launcher) }
+  val auth = remember { BetterAuthViewModel(client, scope, passkeyClient) }
+  val organizations = remember { OrganizationViewModel(client, scope) }
+  DisposableEffect(auth) { onDispose { auth.close() } }
+
+  val state by auth.state.collectAsState()
+  if (!state.isSignedIn) {
+    BetterAuthDialog(
+      auth,
+      onDismissRequest = { /* hide the dialog */ },
+      passkeyCapability = authenticator.capability,
+      socialProviders = emptyList(), // the default ["google", "github"] needs a `socialAuthLauncher`
+    )
+  } else {
+    OrganizationSwitcher(organizations, currentUserId = state.user?.id)
+  }
+}
+```
+
+- Components: `BetterAuthDialog` (modal) and `BetterAuthPanel` (embeddable form: sign in / register, password checklist and strength meter, social, passkey, the two-factor code step); `TwoFactorDialog` (the second sign-in step as its own modal, for apps with their own sign-in form; do not compose it next to `BetterAuthDialog`); `TwoFactorSetupDialog` (enrolment over `client.twoFactor`: URI and backup codes in copyable code blocks, no QR code); `PasskeySignInButton`; `OrganizationSwitcher`; `ApiKeyManagerDialog`.
+- Dialogs never close themselves: stop composing them (for example on `state.isSignedIn`) and handle `onDismissRequest` (Esc). Components never collect `BetterAuthViewModel.effects` (one collector only), so you can.
+- Social buttons call `SignInSocial`, which fails with `UNEXPECTED` when the client has no `socialAuthLauncher`: pass `socialProviders = emptyList()` then.
+- The password stays in composition memory (never saved state); `ApiKeyManagerDialog` drops the one-time secret when it leaves composition.
+- Labels are English only. FDS 0.1.4 has no icon set, so buttons and banners are text-only.
+- Consumers also need the FDS repository `https://maven.pkg.github.com/fediim-dev/fediim-design-system` (same `gpr.user`/`gpr.key` credentials) and the Compose compiler plugin; the module itself resolves FDS 0.1.4-SNAPSHOT from `mavenLocal()` in this repo (`settings.gradle.kts`).
+- Screenshot tests (`FdsScreenshotTest`, Roborazzi) verify 12 goldens in `better-auth-fds/screenshots/` on macOS only; re-record with `./gradlew :better-auth-fds:jvmTest -Proborazzi.test.record=true`.
 
 ## Consuming from GitHub Packages
 
