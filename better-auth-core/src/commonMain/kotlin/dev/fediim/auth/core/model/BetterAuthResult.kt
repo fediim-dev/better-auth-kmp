@@ -20,6 +20,10 @@ public sealed interface BetterAuthResult<out T> {
   public data class RateLimited(val retryAfterSeconds: Long?, val error: BetterAuthError) :
       BetterAuthResult<Nothing>
 
-  /** No HTTP response arrived (connection, TLS, timeout or other transport exception). */
+  /**
+   * An exception while sending the request or handling the response outside body decoding
+   * (connection, TLS, timeout, or an exception thrown by
+   * [dev.fediim.auth.core.storage.AuthTokenStorage]).
+   */
   public data class NetworkError(val cause: Throwable) : BetterAuthResult<Nothing>
 }

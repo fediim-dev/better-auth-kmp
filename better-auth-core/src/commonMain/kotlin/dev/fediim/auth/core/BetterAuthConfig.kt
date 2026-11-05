@@ -7,8 +7,8 @@ import io.ktor.http.Url
  *
  * @property baseUrl Server origin without the `/api/auth` path; a trailing slash is removed. Must
  *   use `https`, or `http` for host `localhost`, `127.0.0.1` or `::1`, or `http` when
- *   [allowInsecureHttpForTesting] is set. Violations, other schemes, userinfo and blank or
- *   unparseable values throw [IllegalArgumentException] from the constructor.
+ *   [allowInsecureHttpForTesting] is set. Violations, other schemes, userinfo, a query or fragment,
+ *   and blank or unparseable values throw [IllegalArgumentException] from the constructor.
  * @property apiKey Sent as `X-API-Key` on every request when not null; omitted from [toString].
  */
 public class BetterAuthConfig(
