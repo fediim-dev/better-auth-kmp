@@ -30,6 +30,29 @@ when (val result = client.signInEmail(SignInEmailRequest("a@b.com", "password"))
 - Server fields the models do not declare are kept in `additionalFields` (CONSTRAINTS C4).
 - `SettingsAuthTokenStorage` stores the token as plaintext in the platform settings store; implement `AuthTokenStorage` for keystore-backed storage.
 
+### Social sign-in
+
+Pass a launcher to the client and call `signInSocial`; every outcome is a `BetterAuthResult` (user denial and timeouts are `Failure(0, error.code)`, see the KDoc of `signInSocial`):
+
+```kotlin
+val client = BetterAuthClient(config, storage, socialAuthLauncher = JvmLoopbackSocialAuthLauncher())
+client.signInSocial("github", scopes = listOf("read:user"))
+```
+
+| Platform | Launcher | Notes |
+|---|---|---|
+| JVM | `JvmLoopbackSocialAuthLauncher()` | one-shot server on `127.0.0.1:<random port>/auth/callback`, closed when the flow ends |
+| Android | `AndroidCustomTabsSocialAuthLauncher(context, "myapp://auth/callback")` | the Activity owning that intent filter calls `AndroidSocialAuthCallbacks.handle(intent.data?.toString())` from `onCreate`/`onNewIntent` |
+| iOS | `IosWebAuthSocialAuthLauncher("myapp") { window }` | `ASWebAuthenticationSession`, iOS 17.4+, receiver `myapp://auth/callback`; runtime check pending (#10) |
+| js / wasmJs | `WebPopupSocialAuthLauncher()` | popup + `postMessage`; if the popup is blocked the page redirects, then call `consumeRedirectCallback()` on load, pass the result to `client.completeSocialSignIn(...)` and remove `ott`/`state` with `history.replaceState` |
+
+Server requirements (better-auth 1.7.17, see `tests/contract-server/server.mjs` for a working setup):
+
+- Plugins `bearer()`, `oneTimeToken({ setOttHeaderOnNewSession: true })`, `oauthPopup()` (web), and a small plugin that appends `ott=<set-ott header>` to the `/callback/*` redirect. `set-ott` is lost on a browser redirect, which is why the plugin is needed. The plugin must append `ott` only for receivers on its own allowlist, never for every trusted origin: for http(s) match the parsed origin (loopback: host `127.0.0.1`, any port) and the exact normalized path, for custom schemes the scheme. A raw prefix check lets `/landingX` or `/landing/../x` through.
+- `account: { skipStateCookieCheck: true }` with the default database state strategy. The browser that finishes the flow is not the HTTP client that started it, so the state cookie cannot be checked; the SDK compares its own `state` instead. Trade-off: the server-wide login-CSRF binding is weaker, so keep `trustedOrigins` tight.
+- `trustedOrigins` must contain every receiver origin and, for the popup flow, the page origin (`popupOrigin`).
+- A custom-scheme callback can be claimed by another app on the device; prefer verified Android App Links / iOS universal links where the provider flow allows it.
+
 ## Consuming from GitHub Packages
 
 ```kotlin

@@ -44,4 +44,11 @@ class BetterAuthConfigTest {
         "key-secret" in BetterAuthConfig("https://example.com", apiKey = "key-secret").toString()
     )
   }
+
+  @Test
+  fun originIsNormalized() {
+    assertEquals("https://example.com", BetterAuthConfig("HTTPS://Example.com:443/").origin)
+    assertEquals("http://127.0.0.1:3000", BetterAuthConfig("http://127.0.0.1:3000").origin)
+    assertEquals("http://[::1]:3000", BetterAuthConfig("http://[::1]:3000").origin)
+  }
 }
