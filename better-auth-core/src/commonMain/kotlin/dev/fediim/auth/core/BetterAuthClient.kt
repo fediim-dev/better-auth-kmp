@@ -3,8 +3,10 @@ package dev.fediim.auth.core
 import dev.fediim.auth.core.apikey.ApiKeyApi
 import dev.fediim.auth.core.http.AUTH_TOKEN_HEADER
 import dev.fediim.auth.core.http.BearerTokenPlugin
+import dev.fediim.auth.core.http.ChallengeCookies
 import dev.fediim.auth.core.http.SkipTokenCaptureKey
 import dev.fediim.auth.core.http.StartEpochKey
+import dev.fediim.auth.core.http.TWO_FACTOR_COOKIE_SUFFIX
 import dev.fediim.auth.core.model.AuthResponse
 import dev.fediim.auth.core.model.AuthSession
 import dev.fediim.auth.core.model.BetterAuthError
@@ -18,6 +20,9 @@ import dev.fediim.auth.core.social.SocialCallback
 import dev.fediim.auth.core.social.socialComplete
 import dev.fediim.auth.core.social.socialSignIn
 import dev.fediim.auth.core.storage.AuthTokenStorage
+import dev.fediim.auth.core.twofactor.SignInResult
+import dev.fediim.auth.core.twofactor.TwoFactorApi
+import dev.fediim.auth.core.twofactor.signInResult
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
@@ -53,7 +58,10 @@ import kotlinx.serialization.json.put
  * A sign-in or sign-up that is fenced out by [signOut] still returns [BetterAuthResult.Success] but
  * its token is discarded. 3xx responses are not followed.
  *
- * [organizations] and [apiKeys] expose the organization and API key plugin endpoints.
+ * [organizations], [apiKeys] and [twoFactor] expose the organization, API key and two-factor plugin
+ * endpoints. A sign-in that answers with a two-factor challenge stores no token; finish it with
+ * [TwoFactorApi.verifyTotp] or [TwoFactorApi.verifyBackupCode]. The signed challenge cookie the
+ * server sets is kept in memory only (CONSTRAINTS C5) and replayed on that call.
  *
  * [signInSocial] needs the `socialAuthLauncher` constructor argument and throws
  * [IllegalStateException] without one; [completeSocialSignIn] does not.
@@ -81,12 +89,18 @@ public class BetterAuthClient(
   /** API key plugin endpoints; see [ApiKeyApi]. */
   public val apiKeys: ApiKeyApi = ApiKeyApi(this)
 
+  internal val challengeCookies = ChallengeCookies(tokenStorage)
+
+  /** Two-factor plugin endpoints; see [TwoFactorApi]. */
+  public val twoFactor: TwoFactorApi = TwoFactorApi(this)
+
   private fun HttpClientConfig<*>.configure() {
     expectSuccess = false
     followRedirects = false
     install(BearerTokenPlugin) {
       storage = tokenStorage
       apiKey = config.apiKey
+      origin = config.origin
     }
   }
 
@@ -96,10 +110,29 @@ public class BetterAuthClient(
 
   /**
    * Signs in with email and password. A two-factor challenge answers [BetterAuthResult.Success]
-   * with a null [AuthResponse.user] and `twoFactorRedirect` in its additional fields.
+   * with a null [AuthResponse.user] and `twoFactorRedirect` in its additional fields; read it with
+   * [signInResult]. It stores no token, remembers the challenge (see [TwoFactorApi.verifyTotp]) and
+   * replaces any older one. A sign-in without a challenge forgets a pending one and stores its
+   * token. Unlike sign-up, a `set-auth-token` header on a non-2xx answer or on a 2xx answer whose
+   * body does not decode is ignored (the server sends none there).
    */
   public suspend fun signInEmail(request: SignInEmailRequest): BetterAuthResult<AuthResponse> =
-      authCall("sign-in/email", json.encodeToString(SignInEmailRequest.serializer(), request))
+      send(
+          HttpMethod.Post,
+          "sign-in/email",
+          json.encodeToString(SignInEmailRequest.serializer(), request),
+          configure = { attributes.put(SkipTokenCaptureKey, Unit) },
+      ) { response, text ->
+        val parsed = json.decodeFromString(AuthResponse.serializer(), text)
+        if (parsed.signInResult is SignInResult.TwoFactorRequired) {
+          challengeCookies.markTwoFactorPending(response)
+          challengeCookies.capture(response, TWO_FACTOR_COOKIE_SUFFIX)
+        } else {
+          challengeCookies.clearTwoFactor()
+          captureHeaderOrBodyToken(response, parsed.token)
+        }
+        parsed
+      }
 
   /** Fetches the current session; `Success(null)` means the server reports no session. */
   public suspend fun getSession(): BetterAuthResult<SessionEnvelope?> =
@@ -119,6 +152,7 @@ public class BetterAuthClient(
   public suspend fun signOut(): BetterAuthResult<Unit> {
     val token = tokenStorage.token()
     tokenStorage.clear()
+    challengeCookies.clearAll()
     if (token == null) return BetterAuthResult.Success(Unit)
     return send(
         HttpMethod.Post,
@@ -198,6 +232,16 @@ public class BetterAuthClient(
         captureBodyToken(response, parsed.token)
         parsed
       }
+
+  /** Stores the `set-auth-token` header, else [bodyToken], if the epoch is unchanged. */
+  internal suspend fun captureHeaderOrBodyToken(response: HttpResponse, bodyToken: String?) {
+    val token =
+        response.headers[AUTH_TOKEN_HEADER]?.takeIf { it.isNotBlank() }
+            ?: bodyToken?.takeIf { it.isNotBlank() }
+            ?: return
+    val epoch = response.call.request.attributes.getOrNull(StartEpochKey) ?: return
+    tokenStorage.writeTokenIfEpoch(epoch, token)
+  }
 
   private suspend fun captureBodyToken(response: HttpResponse, token: String?) {
     if (!response.headers[AUTH_TOKEN_HEADER].isNullOrBlank() || token.isNullOrBlank()) return
