@@ -1,0 +1,43 @@
+{
+  "fediim-safety-gates": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/block-destructive.cjs",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "node hooks/block-gradle-chain.cjs",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "write_to_file|replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/protect-paths.cjs",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "node hooks/block-secrets.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node hooks/tdd-stop.cjs",
+        "timeout": 45
+      }
+    ]
+  }
+}

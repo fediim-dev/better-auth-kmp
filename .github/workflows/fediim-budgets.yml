@@ -1,0 +1,50 @@
+# <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
+name: fediim-budgets
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+jobs:
+  budget:
+    if: startsWith(github.event.comment.body, 'VERDICT:')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      NUM: ${{ github.event.issue.number }}
+      KIND: ${{ github.event.issue.pull_request && 'pr' || 'plan' }}
+      MARKER: "<!-- fediim:budget -->"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Count recorded review verdicts
+        id: audit
+        run: |
+          set +e
+          gh api --paginate --slurp "repos/$GH_REPO/issues/$NUM/comments" > comments.json
+          node .fediim/ci/budget-audit.mjs comments.json "$KIND" > audit.txt
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat audit.txt
+          [ "$code" -ne 2 ]
+      - name: Block once the review budget is exhausted
+        if: steps.audit.outputs.code == '1'
+        run: |
+          gh label create blocked --color B60205 \
+            --description "Awaiting a human decision" 2>/dev/null || true
+          gh api -X POST "repos/$GH_REPO/issues/$NUM/labels" -f "labels[]=blocked" > /dev/null
+          BODY="$MARKER
+          $(cat audit.txt)"
+          CID=$(gh api "repos/$GH_REPO/issues/$NUM/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n1)
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/$GH_REPO/issues/comments/$CID" -f body="$BODY" > /dev/null
+          else
+            gh api -X POST "repos/$GH_REPO/issues/$NUM/comments" -f body="$BODY" > /dev/null
+          fi

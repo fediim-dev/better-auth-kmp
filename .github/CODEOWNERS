@@ -1,0 +1,17 @@
+# CODEOWNERS — scaffolded once by fediim; hand-maintained, never regenerated.
+# Replace @your-org/maintainers with real owners. Rows cover the protected and
+# gated paths from the fediim security packs plus the governance surfaces.
+# Code-owner review binds only when branch protection on main requires it
+# (Require review from Code Owners); fediim never changes GitHub settings.
+
+/src/generated/ @your-org/maintainers
+/auth/ @your-org/maintainers
+/billing/ @your-org/maintainers
+migrations/ @your-org/maintainers
+/db/migrate/ @your-org/maintainers
+/.claude/ @your-org/maintainers
+/.agents/ @your-org/maintainers
+/.agent/ @your-org/maintainers
+/.fediim/ @your-org/maintainers
+/CONSTRAINTS.md @your-org/maintainers
+/.github/workflows/ @your-org/maintainers

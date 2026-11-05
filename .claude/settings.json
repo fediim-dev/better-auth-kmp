@@ -1,0 +1,190 @@
+{
+  "fallbackModel": [
+    "claude-sonnet-5-5"
+  ],
+  "env": {
+    "OTEL_RESOURCE_ATTRIBUTES": "fediim.version=0.2.0,fediim.packs=35ce2e6f6a65,fediim.preset=custom,fediim.experimental=none"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-destructive.cjs",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-gradle-chain.cjs",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-paths.cjs",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-secrets.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-and-scan.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tdd-stop.cjs",
+            "timeout": 45
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Grep(**)",
+      "Edit(**)",
+      "Bash(node .fediim/tools/recall.mjs)",
+      "Bash(node .fediim/tools/recall.mjs *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git show)",
+      "Bash(git show *)",
+      "Bash(git rev-parse)",
+      "Bash(git rev-parse *)",
+      "Bash(git branch --show-current)",
+      "Bash(git branch --show-current *)",
+      "Bash(git merge-base)",
+      "Bash(git merge-base *)",
+      "Bash(git ls-files)",
+      "Bash(git ls-files *)",
+      "Bash(git blame)",
+      "Bash(git blame *)",
+      "Bash(git grep)",
+      "Bash(git grep *)",
+      "Bash(git remote -v)",
+      "Bash(git remote -v *)",
+      "Bash(git switch)",
+      "Bash(git switch *)",
+      "Bash(git stash)",
+      "Bash(git stash *)",
+      "Bash(git fetch)",
+      "Bash(git fetch origin)",
+      "Bash(git fetch origin *)",
+      "Bash(git pull)",
+      "Bash(git pull origin)",
+      "Bash(git pull origin *)",
+      "Bash(git checkout -b *)",
+      "Bash(git add *)",
+      "Bash(git commit*)",
+      "Bash(gh issue list*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue comment*)",
+      "Bash(gh issue create*)",
+      "Bash(gh issue edit * --add-label in-progress*)",
+      "Bash(gh issue edit * --add-label plan-pending*)",
+      "Bash(gh issue edit * --add-label plan-approved*)",
+      "Bash(gh issue edit * --remove-label plan-pending*)",
+      "Bash(gh label create*)",
+      "Bash(gh label list*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr status*)",
+      "Bash(gh pr comment*)",
+      "Bash(gh pr review*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh run view*)",
+      "Bash(gh run list*)",
+      "Bash(fediim integrations record *)",
+      "Bash(fediim integrations list*)",
+      "Bash(ai-docs compile*)",
+      "Bash(ai-docs lint*)",
+      "Bash(ai-docs query*)",
+      "Bash(ai-docs check-guides*)",
+      "Bash(npx ctx7@0.8.2 *)",
+      "Bash(npx -y ctx7@0.8.2 *)",
+      "Bash(git push -u origin chore/*)",
+      "Bash(git push origin chore/*)",
+      "Bash(git push -u origin feat/*)",
+      "Bash(git push origin feat/*)",
+      "Bash(git push -u origin fix/*)",
+      "Bash(git push origin fix/*)",
+      "Bash(./gradlew *)",
+      "Bash(adb *)",
+      "Bash(android docs *)",
+      "Bash(android skills *)",
+      "Bash(android info*)",
+      "Bash(android describe*)",
+      "Bash(android emulator *)",
+      "Bash(android run *)",
+      "Bash(android layout*)",
+      "Bash(android screen *)",
+      "Bash(android studio version-lookup*)",
+      "Bash(ktfmt *)",
+      "Bash(ktlint *)",
+      "Bash(./gradlew check -q)",
+      "Bash(./gradlew compileAllTargets -q)",
+      "Bash(gh pr merge --merge *)",
+      "Bash(gh pr merge * --merge*)",
+      "Bash(gh pr merge --rebase *)",
+      "Bash(gh pr merge * --rebase*)",
+      "Bash(gh pr merge --squash *)",
+      "Bash(gh pr merge * --squash*)"
+    ],
+    "ask": [],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git push * +*)",
+      "Bash(git push --all*)",
+      "Bash(git push * --all*)",
+      "Bash(git push --mirror*)",
+      "Bash(git push * --mirror*)",
+      "Bash(git fetch *--upload-pack*)",
+      "Bash(git reset --hard*)",
+      "Bash(git rebase*)",
+      "Read(**/*.env)",
+      "Read(**/secrets*)",
+      "Read(**/.git/config)",
+      "Edit(**/*.env)",
+      "Edit(**/secrets*)",
+      "Bash(gh issue edit * --add-label ready*)",
+      "Bash(gh issue edit * --add-label approved-to-start*)",
+      "Bash(gh issue edit * --remove-label needs-human-approval*)",
+      "Bash(gh pr merge --admin*)",
+      "Bash(gh pr merge * --admin*)"
+    ]
+  }
+}

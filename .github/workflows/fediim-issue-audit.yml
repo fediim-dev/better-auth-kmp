@@ -1,0 +1,55 @@
+# <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
+name: fediim-issue-audit
+on:
+  issues:
+    types: [opened, edited, reopened]
+permissions:
+  issues: write
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE_NUM: ${{ github.event.issue.number }}
+      MARKER: "<!-- fediim:issue-audit -->"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Audit issue structure
+        id: audit
+        run: |
+          set +e
+          node .fediim/ci/issue-audit.mjs "$GITHUB_EVENT_PATH" > audit.txt
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat audit.txt
+      - name: Label and comment on a thin issue
+        if: steps.audit.outputs.code != '0'
+        run: |
+          gh label create needs-structure --force --color D93F0B \
+            --description "Issue is missing the mandatory fediim structure" || true
+          gh issue edit "$ISSUE_NUM" --add-label needs-structure
+          BODY="$MARKER
+          $(cat audit.txt)"
+          CID=$(gh api "repos/$GH_REPO/issues/$ISSUE_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n1)
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/$GH_REPO/issues/comments/$CID" -f body="$BODY" > /dev/null
+          else
+            gh issue comment "$ISSUE_NUM" --body "$BODY"
+          fi
+      - name: Clear the label once the structure is fixed
+        if: steps.audit.outputs.code == '0'
+        run: |
+          gh issue edit "$ISSUE_NUM" --remove-label needs-structure 2>/dev/null || true
+          CID=$(gh api "repos/$GH_REPO/issues/$ISSUE_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n1)
+          if [ -n "$CID" ]; then
+            BODY="$MARKER
+          issue-audit: PASS — structure complete, label cleared."
+            gh api -X PATCH "repos/$GH_REPO/issues/comments/$CID" -f body="$BODY" > /dev/null
+          fi

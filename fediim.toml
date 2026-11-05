@@ -1,0 +1,50 @@
+[project]
+name = "better-auth-kmp"
+platform = "general"
+preset = "custom"
+stacks = [ "kmp", "kotlin" ]
+targets = [ "antigravity", "claude-code" ]
+autonomy = "autonomous"
+
+[packs]
+selected = [ "coding/ai-first-docs", "coding/architecture-boundaries", "coding/base", "coding/debugging-discipline", "coding/no-guessed-apis", "coding/output-discipline", "coding/project-docs", "coding/tdd-gate", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/constraints-register", "planning/deliver-loop", "planning/git-workflow", "planning/human-gates", "planning/implementation-delegation", "planning/implementation-delegation-antigravity", "planning/inbox-digest", "planning/intake", "planning/issue-structure", "planning/learned-rules", "planning/model-fallback", "planning/model-fallback-antigravity", "planning/parallel-dispatch", "planning/plan-breadth", "planning/review-quorum", "planning/self-eval", "planning/spec-lock", "planning/verification-gates", "security/no-hardcoded-secrets", "security/protected-paths", "security/untrusted-task-inputs" ]
+
+[personas]
+selected = [ "personas/implementer", "personas/plan-reviewer", "personas/planner", "personas/pr-reviewer", "personas/security-reviewer" ]
+
+[commands]
+test = "./gradlew check -q"
+build = "./gradlew compileAllTargets -q"
+
+[commands.format]
+"*.kt" = "ktfmt"
+"*.kts" = "ktfmt"
+
+[models]
+default = "gemini-3.8-flash"
+cheap = "gemini-3.8-flash"
+standard = "gemini-3.8-flash"
+premium = "claude-opus-5-5"
+planning = "claude-opus-5-5"
+antigravityFallback = "gemini-3.8-flash"
+claudeFallback = "claude-sonnet-5-5"
+
+[models.personas]
+pr-reviewer = "inherit"
+security-reviewer = "inherit"
+
+[models.personas.plan-reviewer]
+model = "inherit"
+reasoning = "high"
+
+[models.personas.planner]
+model = "inherit"
+reasoning = "high"
+
+[delegation]
+implementLines = 100
+
+[permissions]
+push = "feature-branches"
+merge = "agent"
+mergeMethods = [ "merge", "rebase", "squash" ]

@@ -1,0 +1,14 @@
+{
+  "projectName": "better-auth-kmp",
+  "summary": "Kotlin Multiplatform client SDK and Compose/FDS UI for Better Auth",
+  "modules": [
+    {"path": "better-auth-core", "language": "jvm", "buildTask": ":better-auth-core:compileKotlinJvm", "summary": "Client, data model, storage, social, organization, API key and 2FA contracts"},
+    {"path": "better-auth-passkeys", "language": "jvm", "buildTask": ":better-auth-passkeys:compileKotlinJvm", "summary": "Passkey authenticator bridges per platform"},
+    {"path": "better-auth-compose", "language": "jvm", "buildTask": ":better-auth-compose:compileKotlinJvm", "summary": "Compose Runtime view models and UI contracts"},
+    {"path": "better-auth-fds", "language": "jvm", "buildTask": ":better-auth-fds:compileKotlinJvm", "summary": "FDS-styled Compose UI"}
+  ],
+  "excludePaths": ["**/build/**", "**/*Test.kt", "**/node_modules/**"],
+  "dependencies": [],
+  "lint": {"minCoverage": 80.0, "failOnViolation": false, "failOnEmptyL1Summary": false, "checkRecipes": false},
+  "budgets": {"l0": 500, "entry": 2000, "l1PerModule": 4000, "l2PerModule": 20000, "l3PerModule": 4000}
+}
