@@ -1,0 +1,7 @@
+{
+  "$comment": "Project-specific guard patterns (regex strings), maintained by hand alongside CONSTRAINTS.md. forbiddenDeps match build/dependency files; forbiddenImports match source files; flagPaths/flagContent warn without blocking.",
+  "forbiddenDeps": [],
+  "forbiddenImports": [],
+  "flagPaths": [],
+  "flagContent": []
+}
