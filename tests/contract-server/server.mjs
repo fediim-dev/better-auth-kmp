@@ -21,7 +21,13 @@ function mockProvider(req, res) {
     res.end(JSON.stringify(body));
   };
   if (url.pathname === "/mock-gitlab/oauth/authorize") {
-    const target = new URL(url.searchParams.get("redirect_uri"));
+    const redirectUri = url.searchParams.get("redirect_uri");
+    if (!redirectUri) {
+      res.statusCode = 400;
+      res.end();
+      return;
+    }
+    const target = new URL(redirectUri);
     if ((url.searchParams.get("scope") ?? "").includes("deny")) {
       target.searchParams.set("error", "access_denied");
     } else {
@@ -55,7 +61,10 @@ function receiverAllowed(location, receivers) {
     return false;
   }
   return receivers.some((r) => {
-    if (r.scheme) return url.protocol === `${r.scheme}:`;
+    if (r.scheme) {
+      if (r.scheme === "http" || r.scheme === "https") return false;
+      return url.protocol === `${r.scheme}:`;
+    }
     if (r.loopback) {
       return url.protocol === "http:" && url.hostname === "127.0.0.1" && url.pathname === r.path;
     }
@@ -68,12 +77,13 @@ const nativeCallbackOtt = ({ receivers }) => ({
   hooks: {
     after: [
       {
-        matcher: (ctx) => ctx.path?.startsWith("/callback/") ?? false,
+        matcher: () => true,
         handler: createAuthMiddleware(async (ctx) => {
           const headers = ctx.context.responseHeaders;
           const ott = headers?.get("set-ott");
+          headers?.delete("set-ott"); // never expose the token as a response header
+          if (!ctx.path?.startsWith("/callback/")) return;
           const location = headers?.get("location");
-          headers?.delete("set-ott");
           if (!ott || !location || !receiverAllowed(location, receivers)) return;
           const next = new URL(location);
           next.searchParams.set("ott", ott);

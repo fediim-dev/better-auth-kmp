@@ -58,12 +58,14 @@ public class IosWebAuthSocialAuthLauncher(
                     else -> SocialCallback.Error("SOCIAL_LAUNCH_FAILED")
                   }
               provider.toString() // ASWebAuthenticationSession holds its provider weakly; keep it
-              continuation.resume(result)
+              if (continuation.isActive) continuation.resume(result)
             }
         session.presentationContextProvider = provider
         session.prefersEphemeralWebBrowserSession = prefersEphemeralSession
         continuation.invokeOnCancellation { session.cancel() }
-        if (!session.start()) continuation.resume(SocialCallback.Error("SOCIAL_LAUNCH_FAILED"))
+        if (!session.start() && continuation.isActive) {
+          continuation.resume(SocialCallback.Error("SOCIAL_LAUNCH_FAILED"))
+        }
       }
     }
   }

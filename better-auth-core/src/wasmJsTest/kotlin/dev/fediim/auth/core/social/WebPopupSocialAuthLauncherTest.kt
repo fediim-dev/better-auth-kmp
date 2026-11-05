@@ -73,10 +73,10 @@ class WebPopupSocialAuthLauncherTest {
     val nonce = Url(opened!!).parameters["popupNonce"]!!
     assertEquals(pageOrigin(), Url(opened!!).parameters["popupOrigin"])
 
-    dispatchMessage("https://evil.example", nonce, "t.s")
+    dispatchMessage("https://evil.example", nonce, "evil.t")
     testScheduler.runCurrent()
     assertNull(storage.token())
-    dispatchMessage("https://example.com", "wrong", "t.s")
+    dispatchMessage("https://example.com", "wrong", "nonce.t")
     testScheduler.runCurrent()
     assertNull(storage.token())
     assertTrue(result.isActive)

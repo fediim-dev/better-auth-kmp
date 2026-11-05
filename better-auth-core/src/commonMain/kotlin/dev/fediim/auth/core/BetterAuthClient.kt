@@ -144,14 +144,17 @@ public class BetterAuthClient(
    * Signs in through the social [provider] using the [SocialAuthLauncher] given to the constructor.
    *
    * Native and redirect flows POST `sign-in/social` and open the returned provider URL; the web
-   * popup flow opens `oauth-popup/start`. A [callbackUrl] replaces the launcher's receiver only
-   * when its origin (scheme, for custom schemes) equals the receiver's; otherwise the launcher's
-   * receiver is used so it never waits on a URL it cannot receive. [scopes] are sent unchanged.
+   * popup flow opens `oauth-popup/start`. On the redirect flow a [callbackUrl] replaces the
+   * launcher's receiver only when its origin (scheme, for custom schemes) equals the receiver's;
+   * otherwise the launcher's receiver is used so it never waits on a URL it cannot receive. On the
+   * popup flow [callbackUrl] is always sent as `callbackURL` (`redirectTo`). [scopes] are sent
+   * unchanged.
    *
    * Returns [BetterAuthResult.Failure] with status 0 and the provider's `error` code when the user
    * denies access, `timeout`, `cancelled`, `superseded` or `state_mismatch` when the flow does not
-   * finish, `SOCIAL_LAUNCH_FAILED` when the launcher throws, and `SESSION_NOT_FOUND` when a popup
-   * token maps to no session. A non-2xx `sign-in/social` answer is returned as-is.
+   * finish, `SOCIAL_LAUNCH_FAILED` when the launcher throws (the iOS launcher also returns it when
+   * the session cannot start), and `SESSION_NOT_FOUND` when a popup token maps to no session. A
+   * non-2xx `sign-in/social` answer is returned as-is.
    *
    * @throws IllegalStateException when the client was created without a launcher.
    */
