@@ -1,5 +1,6 @@
 package dev.fediim.auth.core
 
+import dev.fediim.auth.core.social.originOf
 import io.ktor.http.Url
 
 /**
@@ -45,6 +46,10 @@ public class BetterAuthConfig(
     }
     this.baseUrl = baseUrl.trimEnd('/')
   }
+
+  /** Normalized `scheme://host[:port]` of [baseUrl]; the expected `event.origin` for popups. */
+  internal val origin: String
+    get() = checkNotNull(originOf(baseUrl))
 
   override fun toString(): String = "BetterAuthConfig(baseUrl=$baseUrl)"
 }

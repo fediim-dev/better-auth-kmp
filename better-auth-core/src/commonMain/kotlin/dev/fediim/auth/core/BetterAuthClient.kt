@@ -11,6 +11,10 @@ import dev.fediim.auth.core.model.BetterAuthResult
 import dev.fediim.auth.core.model.SessionEnvelope
 import dev.fediim.auth.core.model.SignInEmailRequest
 import dev.fediim.auth.core.model.SignUpEmailRequest
+import dev.fediim.auth.core.social.SocialAuthLauncher
+import dev.fediim.auth.core.social.SocialCallback
+import dev.fediim.auth.core.social.socialComplete
+import dev.fediim.auth.core.social.socialSignIn
 import dev.fediim.auth.core.storage.AuthTokenStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -47,15 +51,19 @@ import kotlinx.serialization.json.put
  * A sign-in or sign-up that is fenced out by [signOut] still returns [BetterAuthResult.Success] but
  * its token is discarded. 3xx responses are not followed.
  *
+ * [signInSocial] needs the `socialAuthLauncher` constructor argument and throws
+ * [IllegalStateException] without one; [completeSocialSignIn] does not.
+ *
  * Call [close] when finished; it releases the HTTP client and the engine it created. An engine
  * passed to the constructor stays owned by the caller.
  */
 public class BetterAuthClient(
-    private val config: BetterAuthConfig,
-    private val tokenStorage: AuthTokenStorage,
+    internal val config: BetterAuthConfig,
+    internal val tokenStorage: AuthTokenStorage,
     engine: HttpClientEngine? = null,
+    internal val socialAuthLauncher: SocialAuthLauncher? = null,
 ) : AutoCloseable {
-  private val json = Json {
+  internal val json = Json {
     ignoreUnknownKeys = true
     explicitNulls = false
   }
@@ -132,6 +140,42 @@ public class BetterAuthClient(
   public suspend fun revokeOtherSessions(): BetterAuthResult<Unit> =
       send(HttpMethod.Post, "revoke-other-sessions", body = "{}") { _, _ -> }
 
+  /**
+   * Signs in through the social [provider] using the [SocialAuthLauncher] given to the constructor.
+   *
+   * Native and redirect flows POST `sign-in/social` and open the returned provider URL; the web
+   * popup flow opens `oauth-popup/start`. On the redirect flow a [callbackUrl] replaces the
+   * launcher's receiver only when its origin (scheme, for custom schemes) equals the receiver's;
+   * otherwise the launcher's receiver is used so it never waits on a URL it cannot receive. On the
+   * popup flow [callbackUrl] is always sent as `callbackURL` (`redirectTo`). [scopes] are sent
+   * unchanged.
+   *
+   * Returns [BetterAuthResult.Failure] with status 0 and the provider's `error` code when the user
+   * denies access, `timeout`, `cancelled`, `superseded` or `state_mismatch` when the flow does not
+   * finish, `SOCIAL_LAUNCH_FAILED` when the launcher throws (the iOS launcher also returns it when
+   * the session cannot start), and `SESSION_NOT_FOUND` when a popup token maps to no session. A
+   * non-2xx `sign-in/social` answer is returned as-is.
+   *
+   * @throws IllegalStateException when the client was created without a launcher.
+   */
+  public suspend fun signInSocial(
+      provider: String,
+      callbackUrl: String? = null,
+      scopes: List<String>? = null,
+  ): BetterAuthResult<AuthSession> {
+    return socialSignIn(provider, callbackUrl, scopes)
+  }
+
+  /**
+   * Finishes a flow the caller ran itself, for example after
+   * `WebPopupSocialAuthLauncher.consumeRedirectCallback`. A [SocialCallback.OneTimeToken] is
+   * exchanged at `one-time-token/verify`, a [SocialCallback.SessionToken] is checked with
+   * `get-session`, and a [SocialCallback.Error] becomes a status 0 failure with its code. The token
+   * is stored only if [signOut] did not run since this call started.
+   */
+  public suspend fun completeSocialSignIn(callback: SocialCallback): BetterAuthResult<AuthSession> =
+      socialComplete(callback)
+
   /** Closes the underlying HTTP client. */
   override fun close() {
     http.close()
@@ -150,7 +194,7 @@ public class BetterAuthClient(
     tokenStorage.writeTokenIfEpoch(epoch, token)
   }
 
-  private suspend fun <T> send(
+  internal suspend fun <T> send(
       method: HttpMethod,
       path: String,
       body: String? = null,

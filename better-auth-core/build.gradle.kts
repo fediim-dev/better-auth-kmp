@@ -14,7 +14,10 @@ kotlin {
       implementation(libs.kotlinx.coroutines.core)
     }
     jvmMain.dependencies { implementation(libs.ktor.client.okhttp) }
-    androidMain.dependencies { implementation(libs.ktor.client.okhttp) }
+    androidMain.dependencies {
+      implementation(libs.ktor.client.okhttp)
+      implementation(libs.androidx.browser)
+    }
     iosMain.dependencies { implementation(libs.ktor.client.darwin) }
     jsMain.dependencies { implementation(libs.ktor.client.js) }
     wasmJsMain.dependencies { implementation(libs.ktor.client.js) }

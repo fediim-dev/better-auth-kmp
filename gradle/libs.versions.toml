@@ -15,6 +15,7 @@ android-compileSdk = "37"
 android-minSdk = "28"
 
 [libraries]
+androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
