@@ -1,21 +1,27 @@
 package dev.fediim.auth.fds
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.AnnotatedString
 import dev.fediim.auth.compose.ApiKeyUiState
 import dev.fediim.auth.compose.ApiKeyViewModel
 import dev.fediim.auth.compose.OrganizationViewModel
 import dev.fediim.auth.core.apikey.ApiKeyRecord
+import dev.fediim.auth.core.apikey.CreatedApiKey
 import dev.fediim.fds.theme.FediimTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -386,5 +392,60 @@ class AccountComponentsUiTest {
     until("enabled") { enabled == 1 }
     onNodeWithText("Verify").assertIsNotEnabled()
     assertEquals(2, rig.to("two-factor/verify-totp").size)
+  }
+
+  // --- Copy routing ---------------------------------------------------------------------------
+
+  private class RecordingClipboard : ClipboardManager {
+    val copied = mutableListOf<String>()
+
+    override fun setText(annotatedString: AnnotatedString) {
+      copied += annotatedString.text
+    }
+
+    override fun getText(): AnnotatedString? = null
+  }
+
+  @Test
+  fun copyingTheCreatedKeyCopiesExactlyTheKey() = runDesktopTest {
+    val clipboard = RecordingClipboard()
+    setContent {
+      CompositionLocalProvider(LocalClipboardManager provides clipboard) {
+        FediimTheme(darkTheme = false) {
+          ApiKeyManagerContent(
+              ApiKeyUiState(createdKey = CreatedApiKey("raw-secret-AAAA", ApiKeyRecord(id = "k1"))),
+              {},
+              {},
+          )
+        }
+      }
+    }
+    onNodeWithContentDescription("Copy API key").performClick()
+    waitForIdle()
+    assertEquals(listOf("raw-secret-AAAA"), clipboard.copied)
+  }
+
+  @Test
+  fun copyingTheEnrollmentCopiesTheUriAndTheBackupCodes() = runDesktopTest {
+    val rig = FdsTestRig()
+    rig.on("two-factor/enable", enrollment)
+    val clipboard = RecordingClipboard()
+    setContent {
+      CompositionLocalProvider(LocalClipboardManager provides clipboard) {
+        FediimTheme(darkTheme = false) {
+          TwoFactorSetupDialog(rig.client.twoFactor, {}, {}, issuer = "Acme")
+        }
+      }
+    }
+    type(TAG_SETUP_PASSWORD, "pw-setup-10")
+    onNodeWithText("Continue").performClick()
+    until("enrollment") { hasText("JBSWY3DPEHPK3PXP", substring = true) }
+    onNodeWithContentDescription("Copy Authenticator URI").performClick()
+    onNodeWithContentDescription("Copy Backup codes").performClick()
+    waitForIdle()
+    assertEquals(
+        listOf("otpauth://totp/Acme:a@b.com?secret=JBSWY3DPEHPK3PXP", "bk-a1\nbk-b2"),
+        clipboard.copied,
+    )
   }
 }

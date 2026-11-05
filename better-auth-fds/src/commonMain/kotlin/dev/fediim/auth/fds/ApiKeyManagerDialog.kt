@@ -45,7 +45,9 @@ internal const val TAG_REVOKE_PREFIX = "fds.key.revoke."
  * with `message ?: code`. "Close" and Esc call [onDismissRequest]. The secret is dropped when the
  * composition is disposed, including on an Android configuration change, by design (never in saved
  * state); the host app should set `FLAG_SECURE` or the platform equivalent if it needs screenshot
- * protection. Must be inside `FediimTheme`.
+ * protection. The copy control marks the clip sensitive on Android (hidden from clipboard previews
+ * on Android 13+); other platforms copy plain text; the clipboard is not cleared afterwards. Must
+ * be inside `FediimTheme`.
  */
 @Composable
 public fun ApiKeyManagerDialog(
@@ -72,6 +74,7 @@ internal fun ApiKeyManagerContent(
   var name by remember { mutableStateOf("") }
   var pendingRevoke by remember { mutableStateOf<ApiKeyRecord?>(null) }
   val colors = FediimTheme.colors
+  val copySecret = rememberSecretCopy()
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(FediimSpace.Space4)) {
     Text("API keys", style = FediimTheme.typography.headlineSm, color = colors.textStrong)
     state.error?.let {
@@ -89,7 +92,13 @@ internal fun ApiKeyManagerContent(
           BannerTone.Warning,
           Modifier.testTag(TAG_KEY_SECRET),
       )
-      CodeBlock(created.key, "API key", lineNumbers = false, wrap = true)
+      CodeBlock(
+          created.key,
+          "API key",
+          lineNumbers = false,
+          wrap = true,
+          onCopy = { copySecret(created.key) },
+      )
       Button(
           onClick = { onIntent(ApiKeyUiIntent.DismissCreatedKey) },
           variant = ButtonVariant.Secondary,
