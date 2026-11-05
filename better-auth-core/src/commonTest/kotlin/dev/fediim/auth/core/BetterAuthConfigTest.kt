@@ -28,6 +28,8 @@ class BetterAuthConfigTest {
             "example.com",
             "",
             "not a url",
+            "https://example.com?x=",
+            "https://example.com/#frag",
         )) {
       assertFailsWith<IllegalArgumentException>(bad) { BetterAuthConfig(bad) }
     }

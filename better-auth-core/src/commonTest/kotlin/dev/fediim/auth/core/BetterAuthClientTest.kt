@@ -144,6 +144,33 @@ class BetterAuthClientTest {
   }
 
   @Test
+  fun t12LogoutRaceDiscardsInFlightBodyToken() = runTest {
+    val inFlight = CompletableDeferred<Unit>()
+    val gate = CompletableDeferred<Unit>()
+    val rig = Rig { request ->
+      inFlight.complete(Unit)
+      gate.await()
+      ok(authBody)
+    }
+    val signingIn = launch { rig.client.signInEmail(signIn) }
+    inFlight.await()
+    rig.client.signOut()
+    gate.complete(Unit)
+    signingIn.join()
+    assertNull(rig.storage.token())
+    assertEquals(1L, rig.storage.epoch())
+  }
+
+  @Test
+  fun redirectsAreNotFollowed() = runTest {
+    val rig = Rig {
+      respond("", HttpStatusCode.Found, headersOf(HttpHeaders.Location, "https://evil.example/x"))
+    }
+    assertEquals(BetterAuthResult.Failure(302, BetterAuthError()), rig.client.getSession())
+    assertEquals(1, rig.requests.size)
+  }
+
+  @Test
   fun t13ResponseMapping() = runTest {
     var next: suspend MockRequestHandleScope.() -> HttpResponseData = { ok("[1]") }
     val rig = Rig { next() }
@@ -152,6 +179,9 @@ class BetterAuthClientTest {
     next = { ok("""{"twoFactorRedirect":true}""") }
     val twoFactor = rig.client.signInEmail(signIn)
     assertNull((twoFactor as BetterAuthResult.Success).value.user)
+
+    next = { ok("""{"token":"t","user":{"id":"u1","email":"a@b.com","createdAt":"garbage"}}""") }
+    assertEquals(BetterAuthResult.Failure(200, BetterAuthError()), rig.client.signInEmail(signIn))
 
     val errorBody = """{"code":"SLOW","message":"down"}"""
     val parsed = BetterAuthError(code = "SLOW", message = "down")

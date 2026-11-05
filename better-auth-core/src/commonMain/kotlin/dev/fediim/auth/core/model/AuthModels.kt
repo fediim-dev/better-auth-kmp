@@ -78,7 +78,10 @@ public data class AuthResponse(
       "AuthResponse(user=$user, redirect=$redirect, url=$url, additionalFields=$additionalFields)"
 }
 
-/** Error body `{code, message}` of a non-2xx response; either field may be absent. */
+/**
+ * Error body `{code, message}` of a non-2xx response; either field may be absent.
+ * [additionalFields] holds the remaining server content unfiltered, so avoid logging it verbatim.
+ */
 @Serializable(with = BetterAuthErrorSerializer::class)
 @KeepGeneratedSerializer
 public data class BetterAuthError(

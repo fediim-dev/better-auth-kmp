@@ -38,7 +38,8 @@ import kotlinx.serialization.json.put
 /**
  * Client for Better Auth email/password and session endpoints under `<baseUrl>/api/auth`.
  *
- * Every call returns a [BetterAuthResult] and never throws except for coroutine cancellation.
+ * Every call returns a [BetterAuthResult] and never throws except for coroutine cancellation and,
+ * in [signOut], exceptions thrown by [AuthTokenStorage] while reading or clearing the token.
  * Requests send `Authorization: Bearer <token>` from [AuthTokenStorage] (unless the request already
  * carries one) and `X-API-Key` when [BetterAuthConfig.apiKey] is set. A non-blank `set-auth-token`
  * response header is stored only if the storage epoch is unchanged since the request started;
@@ -46,7 +47,8 @@ import kotlinx.serialization.json.put
  * A sign-in or sign-up that is fenced out by [signOut] still returns [BetterAuthResult.Success] but
  * its token is discarded. 3xx responses are not followed.
  *
- * Call [close] when finished; it releases the HTTP engine.
+ * Call [close] when finished; it releases the HTTP client and the engine it created. An engine
+ * passed to the constructor stays owned by the caller.
  */
 public class BetterAuthClient(
     private val config: BetterAuthConfig,
@@ -91,8 +93,9 @@ public class BetterAuthClient(
    * Clears local token state first (advancing the storage epoch so no in-flight response can
    * restore a token), then asks the server to end the session with the previously stored token. The
    * request is skipped when no token was stored. Local state is cleared even when the server call
-   * fails, and the server response never stores a token. A token rotated between reading and
-   * clearing it is revoked on the server only if it was the one read.
+   * fails, and the server response never stores a token. If the stored token rotates between the
+   * read and the clear, the server call revokes the token that was read; the rotated token is
+   * discarded locally but not revoked on the server.
    */
   public suspend fun signOut(): BetterAuthResult<Unit> {
     val token = tokenStorage.token()
@@ -167,7 +170,9 @@ public class BetterAuthClient(
         status.isSuccess() ->
             try {
               BetterAuthResult.Success(decode(response, text))
-            } catch (e: SerializationException) {
+            } catch (e: IllegalArgumentException) {
+              // SerializationException is an IllegalArgumentException; Instant.parse throws the
+              // base type.
               BetterAuthResult.Failure(status.value, BetterAuthError())
             }
         status.value == 429 ->

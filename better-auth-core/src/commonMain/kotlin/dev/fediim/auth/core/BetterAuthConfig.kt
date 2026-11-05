@@ -32,6 +32,9 @@ public class BetterAuthConfig(
           throw IllegalArgumentException("baseUrl is not a valid URL", e)
         }
     require(url.host.isNotEmpty()) { "baseUrl must have a host" }
+    require(url.encodedQuery.isEmpty() && url.fragment.isEmpty()) {
+      "baseUrl must not contain a query or fragment"
+    }
     val host = url.host.lowercase()
     val isLoopback = host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]"
     require(

@@ -11,7 +11,8 @@ import kotlinx.coroutines.sync.withLock
  *
  * The token is stored as plaintext in the platform's settings store (preferences, `UserDefaults`,
  * `localStorage`); supply a custom [AuthTokenStorage] backed by a keystore where that is not
- * acceptable.
+ * acceptable. Use a dedicated [Settings] instance (named preferences file or suite) so app keys
+ * cannot collide; on the web, any script running on the origin (e.g. via XSS) can read the token.
  */
 public class SettingsAuthTokenStorage(private val settings: Settings) : AuthTokenStorage {
   private val mutex = Mutex()
