@@ -9,7 +9,7 @@ Group `dev.fediim.auth`, version `0.1.0-SNAPSHOT`; targets jvm, android, iosArm6
 |---|---|
 | `dev.fediim.auth:better-auth-core` | none |
 | `dev.fediim.auth:better-auth-passkeys` | core |
-| `dev.fediim.auth:better-auth-compose` | core, passkeys |
+| `dev.fediim.auth:better-auth-compose` | core, passkeys, Compose Runtime |
 | `dev.fediim.auth:better-auth-fds` | compose, core, passkeys |
 
 ## better-auth-core
@@ -26,6 +26,7 @@ when (val result = client.signInEmail(SignInEmailRequest("a@b.com", "password"))
 ```
 
 - `baseUrl` must be `https`; `http` is accepted only for `localhost`, `127.0.0.1`, `::1`, or with `allowInsecureHttpForTesting = true`. Anything else throws `IllegalArgumentException`.
+- `signOut(onLocalStateCleared)` runs the callback once after the token, cached organization id and challenge cookies are cleared and before the revoke request, also when no token was stored; if it throws, the revoke is still sent and the exception is rethrown afterwards.
 - Requests send `Authorization: Bearer <token>`; the token is read from the `set-auth-token` response header (body `token` as fallback for sign-in/sign-up) and is dropped if `signOut()` ran meanwhile. A `set-auth-token` on a failed sign-in is ignored. See CONSTRAINTS C5.
 - Server fields the models do not declare are kept in `additionalFields` (CONSTRAINTS C4).
 - `SettingsAuthTokenStorage` stores the token as plaintext in the platform settings store; implement `AuthTokenStorage` for keystore-backed storage.
@@ -40,7 +41,7 @@ client.organizations.setActive("org-id") // setActive(null) clears it
 val created = client.apiKeys.create(CreateApiKeyRequest(name = "ci"))
 ```
 
-- The client caches the active organization id in `AuthTokenStorage` (cleared with the token by `signOut()`). It is a convenience that mirrors this client's own calls only; the server session is authoritative. After a 403 not-a-member the server clears its active organization while the cache keeps the previous id. The cache is not updated by signing in as another user, server-side removal or other devices: call `signOut()` before switching accounts and confirm with `getSession()` before authorization-relevant UI.
+- The client caches the active organization id in `AuthTokenStorage` (cleared with the token by `signOut()`). It is a convenience that mirrors this client's own calls only; the server session is authoritative. After a 403 not-a-member the server clears its active organization while the cache keeps the previous id. The cache is not updated by signing in as another user, server-side removal or other devices: call `signOut()` before switching accounts (`BetterAuthViewModel` does this before every sign-in) and confirm with `getSession()` before authorization-relevant UI.
 - A custom `AuthTokenStorage` must override `activeOrganizationId()` and `writeActiveOrganizationIdIfEpoch()` to persist it (existing implementations still compile and run on the JVM; they just cache nothing), and its `clear()` must also remove the id.
 - The raw API key is returned only in `CreatedApiKey.key`; showing it once is the app's job. Records from `list`/`get`/`update` never carry it.
 - Server requirements: `apiKey({ enableMetadata: true })` for metadata, and `enableSessionForAPIKeys: true` to authenticate with `BetterAuthConfig.apiKey` (`X-API-Key`). That option makes `X-API-Key` a full session of the key owner on every endpoint, overriding any Bearer token (including creating more keys and managing organizations), and the key's rate limit (default 10 per day) counts every request: do not combine `BetterAuthConfig.apiKey` with user sign-in, and never ship a key in a distributed client. The contract server enables it for tests only. Rate-limit and permission fields are server-only and read-only here. See CONSTRAINTS C4 and C5.
@@ -118,6 +119,30 @@ A local failure is `BetterAuthResult.Failure(0, error.code)` with code `PASSKEY_
 | JVM | `JvmPasskeyAuthenticator(hook = null)` | unsupported without a `hook` authenticator |
 
 Server: `passkey({ rpID, origin })` with `rpID` the domain the app is linked to and `origin` (a string or list) containing every origin a ceremony runs from. Better Auth keeps the challenge in a signed cookie (`<prefix>.better-auth-passkey`, 5 minutes); the SDK keeps it in memory and replays it once on the verify call (CONSTRAINTS C5). The live test suite covers the options call and negative verifies; a full ceremony needs a real authenticator.
+
+## better-auth-compose
+
+Headless state holders (no `@Composable`, no Compose compiler plugin; `@Immutable` from Compose Runtime marks the state classes). Create them with the scope of your screen or app and call `close()` when it ends:
+
+```kotlin
+val auth = BetterAuthViewModel(client, scope, passkeys = passkeyClient, onClearUserCache = { cache.clear() })
+val organizations = OrganizationViewModel(client, scope)
+val apiKeys = ApiKeyViewModel(client, scope)
+
+auth.dispatch(AuthUiIntent.EmailChanged("a@b.com"))
+auth.dispatch(AuthUiIntent.PasswordChanged("password"))
+auth.dispatch(AuthUiIntent.SubmitAuth)
+// in a composable: val state by auth.state.collectAsState()
+```
+
+- `state` is a `StateFlow` and `effects` a `Flow`; turning them into Compose state with `collectAsState()` is up to the app. `effects` supports one collector, buffers 64 and drops the oldest; state is the source of truth.
+- `dispatch` is not thread-safe: call it on `scope`'s single thread (for example `Dispatchers.Main`). Clearing local state inside `Logout` before `dispatch` returns holds with `SettingsAuthTokenStorage`; a custom storage that suspends in `token()`/`clear()` delays it.
+- **Re-login.** `SubmitAuth`, `SignInSocial` and `SignInPasskey` first sign out the previous session: its token is revoked with its own Bearer, local state is cleared and `onClearUserCache` runs, on every attempt and also for the same user. A failed re-login therefore leaves the user signed out. A failed revoke is reported as the `SessionRevocationFailed` effect and the sign-in continues. `onClearUserCache` runs after the token is cleared and before the revoke request; if it throws, `UserCacheClearFailed` is emitted and the sign-out goes on.
+- **Logout** cancels the running attempt, resets the state at once and is ignored while another Logout runs; auth intents are ignored while it runs. A revoke is never cancelled by Logout or `close()`, so a hung revoke outlives `close()` until the HTTP client times out.
+- **Passwords** are never part of the state: the view model keeps the last `PasswordChanged` privately and clears it after sign-in and on Logout. Registration is blocked (`PASSWORD_TOO_SHORT`) below 8 characters; `passwordStrength` is 0..4.
+- **Lockout.** A 429 with a positive `Retry-After` sets `isLockedOut` and counts `lockoutSecondsRemaining` down on `scope`'s clock. It blocks `SubmitAuth`, `SubmitTwoFactor`, `SignInSocial` and `SignInPasskey` (not `RestoreSession` or `Logout`) and survives Logout.
+- `OrganizationViewModel` and `ApiKeyViewModel` have no single-flight guard (the last response wins); send `Clear` from `onClearUserCache` so a new user never sees the old user's lists or the one-time `createdKey`.
+- iOS compiles but the module's tests run on jvm, js, wasmJs and the Android host only; the iOS runtime check is tracked in #10.
 
 ## Consuming from GitHub Packages
 
