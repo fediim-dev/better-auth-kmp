@@ -45,7 +45,8 @@ private constructor(val process: Process, port: Int) : AutoCloseable {
 
     /**
      * Starts `node <serverDir>/server.mjs` and returns once it printed `PORT=<n>`. The child gets
-     * only [childEnvironment] of this JVM's environment, so CI secrets never reach it.
+     * only [childEnvironment] of this JVM's environment, so no variable outside the allowlist
+     * reaches it.
      *
      * @throws IllegalStateException when the property `betterauth.contractServerDir` is unset and
      *   no [serverDir] is given, the process exits before printing the port (message holds the exit

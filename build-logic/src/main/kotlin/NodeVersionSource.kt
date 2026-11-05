@@ -19,7 +19,7 @@ abstract class NodeVersionSource : ValueSource<String, ValueSourceParameters.Non
           standardOutput = out
         }
         out.toString().trim()
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         "absent"
       }
 }
