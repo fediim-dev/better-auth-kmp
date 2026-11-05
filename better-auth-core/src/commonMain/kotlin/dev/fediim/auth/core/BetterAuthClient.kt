@@ -50,13 +50,14 @@ import kotlinx.serialization.json.put
  * Client for Better Auth email/password and session endpoints under `<baseUrl>/api/auth`.
  *
  * Every call returns a [BetterAuthResult] and never throws except for coroutine cancellation and,
- * in [signOut], exceptions thrown by [AuthTokenStorage] while reading or clearing the token.
- * Requests send `Authorization: Bearer <token>` from [AuthTokenStorage] (unless the request already
- * carries one) and `X-API-Key` when [BetterAuthConfig.apiKey] is set. A non-blank `set-auth-token`
- * response header is stored only if the storage epoch is unchanged since the request started;
- * sign-in and sign-up fall back to the body `token` under the same rule when the header is absent.
- * A sign-in or sign-up that is fenced out by [signOut] still returns [BetterAuthResult.Success] but
- * its token is discarded. 3xx responses are not followed.
+ * in [signOut], exceptions thrown by [AuthTokenStorage] while reading or clearing the token and by
+ * its `onLocalStateCleared` callback. Requests send `Authorization: Bearer <token>` from
+ * [AuthTokenStorage] (unless the request already carries one) and `X-API-Key` when
+ * [BetterAuthConfig.apiKey] is set. A non-blank `set-auth-token` response header is stored only if
+ * the storage epoch is unchanged since the request started; sign-in and sign-up fall back to the
+ * body `token` under the same rule when the header is absent. A sign-in or sign-up that is fenced
+ * out by [signOut] still returns [BetterAuthResult.Success] but its token is discarded. 3xx
+ * responses are not followed.
  *
  * [organizations], [apiKeys] and [twoFactor] expose the organization, API key and two-factor plugin
  * endpoints. A sign-in that answers with a two-factor challenge stores no token; finish it with
@@ -143,27 +144,46 @@ public class BetterAuthClient(
   /**
    * Clears local state (the token and the cached active organization id, both removed by
    * [AuthTokenStorage.clear]) first (advancing the storage epoch so no in-flight response can
-   * restore a token), then asks the server to end the session with the previously stored token. The
-   * request is skipped when no token was stored. Local state is cleared even when the server call
-   * fails, and the server response never stores a token. If the stored token rotates between the
-   * read and the clear, the server call revokes the token that was read; the rotated token is
-   * discarded locally but not revoked on the server.
+   * restore a token), then calls [onLocalStateCleared], then asks the server to end the session
+   * with the previously stored token. The request is skipped when no token was stored;
+   * [onLocalStateCleared] runs exactly once either way, after the token, cached organization id and
+   * challenge cookies are cleared and before the server call. Local state is cleared even when the
+   * server call fails, and the server response never stores a token. If the stored token rotates
+   * between the read and the clear, the server call revokes the token that was read; the rotated
+   * token is discarded locally but not revoked on the server.
+   *
+   * If [onLocalStateCleared] throws, the server call is still attempted and the exception is
+   * rethrown afterwards, so the old token is revoked either way. When the calling coroutine is
+   * cancelled the server call is cancelled with it; callers that must revoke wrap this call in
+   * `NonCancellable`.
    */
-  public suspend fun signOut(): BetterAuthResult<Unit> {
+  public suspend fun signOut(onLocalStateCleared: suspend () -> Unit = {}): BetterAuthResult<Unit> {
     val token = tokenStorage.token()
     tokenStorage.clear()
     challengeCookies.clearAll()
-    if (token == null) return BetterAuthResult.Success(Unit)
-    return send(
-        HttpMethod.Post,
-        "sign-out",
-        body = "{}",
-        configure = {
-          header(HttpHeaders.Authorization, "Bearer $token")
-          attributes.put(SkipTokenCaptureKey, Unit)
-        },
-    ) { _, _ ->
+    var callbackFailure: Exception? = null
+    try {
+      onLocalStateCleared()
+    } catch (e: Exception) {
+      callbackFailure = e
     }
+    val result =
+        if (token == null) {
+          BetterAuthResult.Success(Unit)
+        } else {
+          send(
+              HttpMethod.Post,
+              "sign-out",
+              body = "{}",
+              configure = {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                attributes.put(SkipTokenCaptureKey, Unit)
+              },
+          ) { _, _ ->
+          }
+        }
+    if (callbackFailure != null) throw callbackFailure
+    return result
   }
 
   /** Lists the signed-in user's active sessions. */
