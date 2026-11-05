@@ -30,6 +30,21 @@ when (val result = client.signInEmail(SignInEmailRequest("a@b.com", "password"))
 - Server fields the models do not declare are kept in `additionalFields` (CONSTRAINTS C4).
 - `SettingsAuthTokenStorage` stores the token as plaintext in the platform settings store; implement `AuthTokenStorage` for keystore-backed storage.
 
+### Organizations and API keys
+
+`client.organizations` and `client.apiKeys` cover the `organization()` and `apiKey()` plugins; every call returns a `BetterAuthResult`:
+
+```kotlin
+client.organizations.create(CreateOrganizationRequest("Acme", "acme"))
+client.organizations.setActive("org-id") // setActive(null) clears it
+val created = client.apiKeys.create(CreateApiKeyRequest(name = "ci"))
+```
+
+- The client caches the active organization id in `AuthTokenStorage` (cleared with the token by `signOut()`). It is a convenience that mirrors this client's own calls only; the server session is authoritative. After a 403 not-a-member the server clears its active organization while the cache keeps the previous id.
+- A custom `AuthTokenStorage` must override `activeOrganizationId()` and `writeActiveOrganizationIdIfEpoch()` to persist it (existing implementations still compile and run on the JVM; they just cache nothing), and its `clear()` must also remove the id.
+- The raw API key is returned only in `CreatedApiKey.key`; showing it once is the app's job. Records from `list`/`get`/`update` never carry it.
+- Server requirements: `apiKey({ enableMetadata: true })` for metadata, and `enableSessionForAPIKeys: true` to authenticate with `BetterAuthConfig.apiKey` (`X-API-Key`). Rate-limit and permission fields are server-only and read-only here. See CONSTRAINTS C4 and C5.
+
 ### Social sign-in
 
 Pass a launcher to the client and call `signInSocial`; every outcome is a `BetterAuthResult` (user denial and timeouts are `Failure(0, error.code)`, see the KDoc of `signInSocial`):

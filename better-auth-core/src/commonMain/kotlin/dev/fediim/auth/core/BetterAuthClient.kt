@@ -1,5 +1,6 @@
 package dev.fediim.auth.core
 
+import dev.fediim.auth.core.apikey.ApiKeyApi
 import dev.fediim.auth.core.http.AUTH_TOKEN_HEADER
 import dev.fediim.auth.core.http.BearerTokenPlugin
 import dev.fediim.auth.core.http.SkipTokenCaptureKey
@@ -11,6 +12,7 @@ import dev.fediim.auth.core.model.BetterAuthResult
 import dev.fediim.auth.core.model.SessionEnvelope
 import dev.fediim.auth.core.model.SignInEmailRequest
 import dev.fediim.auth.core.model.SignUpEmailRequest
+import dev.fediim.auth.core.organization.OrganizationApi
 import dev.fediim.auth.core.social.SocialAuthLauncher
 import dev.fediim.auth.core.social.SocialCallback
 import dev.fediim.auth.core.social.socialComplete
@@ -51,6 +53,8 @@ import kotlinx.serialization.json.put
  * A sign-in or sign-up that is fenced out by [signOut] still returns [BetterAuthResult.Success] but
  * its token is discarded. 3xx responses are not followed.
  *
+ * [organizations] and [apiKeys] expose the organization and API key plugin endpoints.
+ *
  * [signInSocial] needs the `socialAuthLauncher` constructor argument and throws
  * [IllegalStateException] without one; [completeSocialSignIn] does not.
  *
@@ -70,6 +74,12 @@ public class BetterAuthClient(
 
   private val http: HttpClient =
       engine?.let { HttpClient(it) { configure() } } ?: HttpClient { configure() }
+
+  /** Organization plugin endpoints; see [OrganizationApi]. */
+  public val organizations: OrganizationApi = OrganizationApi(this)
+
+  /** API key plugin endpoints; see [ApiKeyApi]. */
+  public val apiKeys: ApiKeyApi = ApiKeyApi(this)
 
   private fun HttpClientConfig<*>.configure() {
     expectSuccess = false
@@ -98,7 +108,8 @@ public class BetterAuthClient(
       }
 
   /**
-   * Clears local token state first (advancing the storage epoch so no in-flight response can
+   * Clears local state (the token and the cached active organization id, both removed by
+   * [AuthTokenStorage.clear]) first (advancing the storage epoch so no in-flight response can
    * restore a token), then asks the server to end the session with the previously stored token. The
    * request is skipped when no token was stored. Local state is cleared even when the server call
    * fails, and the server response never stores a token. If the stored token rotates between the
