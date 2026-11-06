@@ -10,7 +10,7 @@ Group `dev.fediim.auth`, version `0.1.0-SNAPSHOT`; targets jvm, android, iosArm6
 | `dev.fediim.auth:better-auth-core` | none |
 | `dev.fediim.auth:better-auth-passkeys` | core |
 | `dev.fediim.auth:better-auth-compose` | core, passkeys, Compose Runtime |
-| `dev.fediim.auth:better-auth-fds` | compose, core, passkeys, FDS (`dev.fediim.fds` 0.1.4-SNAPSHOT) |
+| `dev.fediim.auth:better-auth-fds` | compose, core, passkeys, FDS (`dev.fediim.fds` 1.0.0) |
 
 ## better-auth-core
 
@@ -178,9 +178,8 @@ FediimTheme {
 - Components: `BetterAuthDialog` (modal) and `BetterAuthPanel` (embeddable form: sign in / register, password checklist and strength meter, social, passkey, the two-factor code step); `TwoFactorDialog` (the second sign-in step as its own modal, for apps with their own sign-in form; do not compose it next to `BetterAuthDialog`); `TwoFactorSetupDialog` (enrolment over `client.twoFactor`: URI and backup codes in copyable code blocks, no QR code); `PasskeySignInButton`; `OrganizationSwitcher`; `ApiKeyManagerDialog`.
 - Dialogs never close themselves: stop composing them (for example on `state.isSignedIn`) and handle `onDismissRequest` (Esc). Components never collect `BetterAuthViewModel.effects` (one collector only), so you can.
 - Social buttons call `SignInSocial`, which fails with `UNEXPECTED` when the client has no `socialAuthLauncher`: pass `socialProviders = emptyList()` then.
-- Labels are English only. FDS 0.1.4 has no icon set, so buttons and banners are text-only.
-- Consumers also need the FDS repository `https://maven.pkg.github.com/fediim-dev/fediim-design-system` (same `gpr.user`/`gpr.key` credentials) and the Compose compiler plugin; until FDS 0.1.4-SNAPSHOT is republished to GitHub Packages (it returns 404 today, plan #8 L29), consumers can only resolve it from `mavenLocal()`.
-- This module's own build resolves FDS from `mavenLocal()` first (`settings.gradle.kts`); remove that before any release.
+- Labels are English only. FDS 1.0.0 ships an `Icon` composable but no icon set, so buttons and banners are text-only.
+- Consumers also need the FDS repository `https://maven.pkg.github.com/fediim-dev/fediim-design-system` (same `gpr.user`/`gpr.key` credentials) and the Compose compiler plugin.
 - Secrets are never in saved state and are dropped when the composition is disposed, including on an Android configuration change, by design: the password and the TOTP URI and backup codes live in composition memory; a new API key lives in `ApiKeyUiState.createdKey` (the view model's state) and `ApiKeyManagerDialog` dispatches `DismissCreatedKey` when it leaves composition. Set `FLAG_SECURE` or the platform equivalent in the host app if you need screenshot protection. Copies of the API key, TOTP URI and backup codes are marked sensitive on Android (hidden from clipboard previews on 13+) and are plain text elsewhere; the clipboard is not cleared afterwards.
 - Screenshot tests (`FdsScreenshotTest`, Roborazzi) verify 12 goldens in `better-auth-fds/screenshots/` on macOS only; re-record with `./gradlew :better-auth-fds:jvmTest -Proborazzi.test.record=true`. The Android clip entry is checked by `./gradlew :better-auth-fds:connectedAndroidDeviceTest` (needs a running emulator or device).
 
