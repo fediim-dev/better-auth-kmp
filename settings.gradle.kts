@@ -15,13 +15,11 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
-    // FDS snapshots (used from #8 by better-auth-fds only); credentials are optional.
+    // FDS releases (used from #8 by better-auth-fds only); credentials are optional.
     // exclusiveContent: dev.fediim.fds resolves only from this repo, never from
     // google/mavenCentral.
     exclusiveContent {
       forRepositories(
-          // L29: 0.1.4-SNAPSHOT is not served by GitHub Packages (404); it comes from mavenLocal.
-          mavenLocal(),
           maven {
           url = uri("https://maven.pkg.github.com/fediim-dev/fediim-design-system")
           credentials {

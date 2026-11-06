@@ -53,7 +53,7 @@ internal const val TAG_RULE_PREFIX = "fds.rule."
 
 /**
  * A window `Dialog` holding an FDS `Card` (scrollable when taller than the window); Esc inside it
- * calls [onDismissRequest]. FDS 0.1.4 has no content-slot dialog, so this copies the Esc handling
+ * calls [onDismissRequest]. FDS 1.0.0 has no content-slot dialog, so this copies the Esc handling
  * of its confirm dialog.
  */
 @Composable
@@ -86,7 +86,7 @@ internal fun FdsDialogFrame(
   }
 }
 
-/** An FDS [Banner] with the (empty) icon slot filled, as FDS 0.1.4 ships no icon set. */
+/** An FDS [Banner] with the (empty) icon slot filled, as FDS 1.0.0 ships no icon set. */
 @Composable
 internal fun FdsBanner(
     title: String,
