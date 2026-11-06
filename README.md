@@ -3,7 +3,7 @@ Kotlin Multiplatform client SDK and Compose/FDS UI for Better Auth
 
 ## Modules
 
-Group `dev.fediim.auth`, version `1.0.0-rc1`; targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
+Group `dev.fediim.auth`, latest release `1.0.0-rc1` (`main` is `1.0.0-SNAPSHOT`, not published); targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
 
 | Artifact | Depends on |
 |---|---|
@@ -205,6 +205,7 @@ repositories {
 - `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](tests/contract-harness). The harness starts Node with only `PATH`, `HOME`, the temp-dir variables, `LANG` and `SystemRoot` from the environment, plus `BETTER_AUTH_TELEMETRY=false`.
 - `./gradlew publishToMavenLocal` installs into `~/.m2` without credentials.
 - `./gradlew publishAllPublicationsToGitHubPackagesRepository` publishes; credentials from `gpr.user`/`gpr.key` or `GITHUB_ACTOR`/`GITHUB_TOKEN`.
-- CI publishes on push to `main` (snapshots) and on `v*` tags, but CI publishing to `kmp-packages` is not set up yet (its token is scoped to this repository), so releases are published locally with the task above until that is fixed. For a release, set `version` in `gradle.properties` (and `VERSION` in each module) to the release or pre-release version (`1.0.0`, `1.0.0-rc1`) before tagging.
+- Publishing to `kmp-packages` is manual: run the task above from the release commit. CI's `publish` job is still configured to run on push to `main` and on `v*` tags, but it cannot write to `kmp-packages`: it uses `GITHUB_TOKEN`, which only covers packages linked to this repository (Maven packages on GitHub Packages have repository-scoped permissions). It fails until a `write:packages` token is added as a secret and `.github/workflows/ci.yml` uses it.
+- Release steps: set `version` in `gradle.properties` (and `VERSION` in each module) to the release or pre-release version (`1.0.0`, `1.0.0-rc1`), publish, tag `v<version>`, then set the next `-SNAPSHOT` on `main`.
 
 See [CONSTRAINTS.md](CONSTRAINTS.md) for architecture rules and [ai-context.md](ai-context.md) for the project map.
