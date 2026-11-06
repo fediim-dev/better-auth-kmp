@@ -7,20 +7,27 @@
 ## Architecture overview
 
 Four Kotlin Multiplatform library modules, group `dev.fediim.auth`, configured by the
-`betterauth.kmp.library` convention plugin (`build-logic/`).
+`betterauth.kmp.library` convention plugin (`build-logic/`), plus an unpublished Clean Architecture
+reference application module (`:sample`).
 
 ```
 better-auth-core      (no module deps; no Compose, no FDS)
 better-auth-passkeys  -> core
 better-auth-compose   -> core, passkeys (+ Compose Runtime)
 better-auth-fds       -> compose, core, passkeys (+ FDS)
+sample                -> fds, compose, core, passkeys (Clean Architecture: domain, data, presentation, di)
 ```
 
 Allowed imports mirror these edges and are enforced by `forbiddenImports` in
 `.fediim/guards.json` (source imports and `project(...)` edges in module build files):
 core never imports `androidx.compose`, `dev.fediim.fds` or other auth modules; passkeys never
 imports `androidx.compose`, `dev.fediim.fds`, `dev.fediim.auth.compose` or `.fds`; compose never
-imports `dev.fediim.fds` or `dev.fediim.auth.fds`.
+imports `dev.fediim.fds` or `dev.fediim.auth.fds`; published SDK modules never import
+`dev.fediim.auth.sample` or `:sample`.
+Inside `:sample`:
+`domain` never imports `sample.data`, `sample.presentation`, `sample.di`, `io.ktor`, or `androidx.compose.ui`;
+`data` never imports `sample.presentation` or `sample.di`;
+`presentation` never imports `sample.data`.
 
 ## Constraints register
 

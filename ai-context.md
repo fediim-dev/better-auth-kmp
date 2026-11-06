@@ -9,8 +9,9 @@ targets jvm (JDK 21), android, iosArm64, iosSimulatorArm64, js, wasmJs.
 | `better-auth-passkeys` | `dev.fediim.auth.passkeys` | Passkey authenticator bridges |
 | `better-auth-compose` | `dev.fediim.auth.compose` | Compose Runtime view models, UI contracts |
 | `better-auth-fds` | `dev.fediim.auth.fds` | FDS-styled Compose UI |
+| `sample` | `dev.fediim.auth.sample` | Unpublished Clean Architecture reference app (`domain`, `data`, `presentation`, `di`) |
 
-Edges: passkeys -> core; compose -> core + passkeys; fds -> compose + core + passkeys.
+Edges: passkeys -> core; compose -> core + passkeys; fds -> compose + core + passkeys; sample -> fds + compose + core + passkeys (sample is unpublished).
 Layering is guard-enforced (`.fediim/guards.json`); rules and locked decisions: `CONSTRAINTS.md`.
 Build: `./gradlew check`; shared build config: `build-logic/` (`betterauth.kmp.library`).
 `tests/contract-server/` is the Node better-auth server for the live contract suites of core and passkeys (`jvmTest`); both compile the shared harness in `tests/contract-harness/`.

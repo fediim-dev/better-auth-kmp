@@ -48,3 +48,5 @@ include(":better-auth-passkeys")
 include(":better-auth-compose")
 
 include(":better-auth-fds")
+
+include(":sample")
