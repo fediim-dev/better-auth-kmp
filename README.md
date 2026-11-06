@@ -3,7 +3,7 @@ Kotlin Multiplatform client SDK and Compose/FDS UI for Better Auth
 
 ## Modules
 
-Group `dev.fediim.auth`, latest release `1.0.0-rc1` (`main` is `1.0.0-SNAPSHOT`, not published); targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
+Group `dev.fediim.auth`, version `1.0.0-rc1`; targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
 
 | Artifact | Depends on |
 |---|---|
@@ -206,6 +206,6 @@ repositories {
 - `./gradlew publishToMavenLocal` installs into `~/.m2` without credentials.
 - `./gradlew publishAllPublicationsToGitHubPackagesRepository` publishes; credentials from `gpr.user`/`gpr.key` or `GITHUB_ACTOR`/`GITHUB_TOKEN`.
 - Publishing to `kmp-packages` is manual: run the task above from the release commit. CI's `publish` job is still configured to run on push to `main` and on `v*` tags, but it cannot write to `kmp-packages`: it uses `GITHUB_TOKEN`, which only covers packages linked to this repository (Maven packages on GitHub Packages have repository-scoped permissions). It fails until a `write:packages` token is added as a secret and `.github/workflows/ci.yml` uses it.
-- Release steps: set `version` in `gradle.properties` (and `VERSION` in each module) to the release or pre-release version (`1.0.0`, `1.0.0-rc1`), publish, tag `v<version>`, then set the next `-SNAPSHOT` on `main`.
+- Versions follow SemVer: pre-releases `-alphaNN`, `-betaNN`, `-rcN` (e.g. `1.0.0-alpha01`, `1.0.0-rc1`), then the final release; no `-SNAPSHOT`. `main` carries the last published version. Release steps: set `version` in `gradle.properties` (and `VERSION` in each module) to the next pre-release or final version, publish, then tag `v<version>`.
 
 See [CONSTRAINTS.md](CONSTRAINTS.md) for architecture rules and [ai-context.md](ai-context.md) for the project map.
