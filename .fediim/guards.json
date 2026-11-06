@@ -4,27 +4,47 @@
   "forbiddenImports": [
     {
       "file": "better-auth-core/",
-      "pattern": "^\\s*import\\s+(androidx\\.compose|dev\\.fediim\\.fds|dev\\.fediim\\.auth\\.(passkeys|compose|fds))\\b"
+      "pattern": "^\\s*import\\s+(androidx\\.compose|dev\\.fediim\\.fds|dev\\.fediim\\.auth\\.(passkeys|compose|fds|sample))\\b"
     },
     {
       "file": "better-auth-passkeys/",
-      "pattern": "^\\s*import\\s+(androidx\\.compose|dev\\.fediim\\.fds|dev\\.fediim\\.auth\\.(compose|fds))\\b"
+      "pattern": "^\\s*import\\s+(androidx\\.compose|dev\\.fediim\\.fds|dev\\.fediim\\.auth\\.(compose|fds|sample))\\b"
     },
     {
       "file": "better-auth-compose/",
-      "pattern": "^\\s*import\\s+(dev\\.fediim\\.fds|dev\\.fediim\\.auth\\.fds)\\b"
+      "pattern": "^\\s*import\\s+(dev\\.fediim\\.fds|dev\\.fediim\\.auth\\.(fds|sample))\\b"
+    },
+    {
+      "file": "better-auth-fds/",
+      "pattern": "^\\s*import\\s+dev\\.fediim\\.auth\\.sample\\b"
     },
     {
       "file": "better-auth-core/build.gradle.kts",
-      "pattern": ":better-auth-(passkeys|compose|fds)\\b"
+      "pattern": "(:better-auth-(passkeys|compose|fds)|:sample)\\b"
     },
     {
       "file": "better-auth-passkeys/build.gradle.kts",
-      "pattern": ":better-auth-(compose|fds)\\b"
+      "pattern": "(:better-auth-(compose|fds)|:sample)\\b"
     },
     {
       "file": "better-auth-compose/build.gradle.kts",
-      "pattern": ":better-auth-fds\\b"
+      "pattern": "(:better-auth-fds|:sample)\\b"
+    },
+    {
+      "file": "better-auth-fds/build.gradle.kts",
+      "pattern": ":sample\\b"
+    },
+    {
+      "file": "^sample/src/[^/]+/kotlin/dev/fediim/auth/sample/domain/",
+      "pattern": "^\\s*import\\s+(dev\\.fediim\\.auth\\.sample\\.(data|presentation|di)|io\\.ktor|androidx\\.compose\\.ui)\\b"
+    },
+    {
+      "file": "^sample/src/[^/]+/kotlin/dev/fediim/auth/sample/data/",
+      "pattern": "^\\s*import\\s+dev\\.fediim\\.auth\\.sample\\.(presentation|di)\\b"
+    },
+    {
+      "file": "^sample/src/[^/]+/kotlin/dev/fediim/auth/sample/presentation/",
+      "pattern": "^\\s*import\\s+dev\\.fediim\\.auth\\.sample\\.data\\b"
     }
   ],
   "flagPaths": [],

@@ -12,6 +12,30 @@ Group `dev.fediim.auth`, version `1.0.0-rc1`; targets jvm, android, iosArm64, io
 | `dev.fediim.auth:better-auth-compose` | core, passkeys, Compose Runtime |
 | `dev.fediim.auth:better-auth-fds` | compose, core, passkeys, FDS (`dev.fediim.fds` 1.0.0) |
 
+The `:sample` module is an unpublished Clean Architecture reference application demonstrating the full SDK suite across JVM Desktop, Android, iOS, and Web. See [Sample Application](#sample-application).
+
+## Sample Application
+
+The `:sample` module (`dev.fediim.auth.sample`) demonstrates Clean Architecture layers (`domain`, `data`, `presentation`, `di`) with guard-enforced boundaries:
+- **Offline Demo**: In-memory store and Ktor `MockEngine` with pre-seeded users (`alice@example.com`, `bob-2fa@example.com`, `carol-passkey@example.com`), interactive failure simulations (`INVALID_CREDENTIALS`, `INVALID_TWO_FACTOR_CODE`, `PASSKEY_FAILED`, `RATE_LIMITED_429`), and full demo reset.
+- **Live Server**: Strictly validated connection to external Better Auth backends (rejecting non-loopback HTTP like `http://evil.example.com`).
+- **Interactive Features**: Email/password authentication, 2FA setup and verification, WebAuthn passkey registration and deletion, organization switching, and API key management in FDS (`FediimTheme`).
+- **Cross-Platform Entry Points**: Desktop JVM (`sample/src/jvmMain`), Android (`sample/src/androidMain`), iOS (`sample/src/iosMain`), and Web (`sample/src/webMain`).
+
+```bash
+# Run unit, data, interactive UI, and Roborazzi screenshot verification tests
+./gradlew :sample:jvmTest
+
+# Re-record Roborazzi screenshot goldens (12 light/dark states)
+./gradlew :sample:jvmTest -Proborazzi.test.record=true
+
+# Run Android host tests
+./gradlew :sample:testAndroidHostTest
+
+# Compile all targets
+./gradlew :sample:compileAllTargets -q
+```
+
 ## better-auth-core
 
 ```kotlin
