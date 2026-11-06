@@ -5,4 +5,4 @@ validated: 2
 last-validated: 2026-11-06
 evidence: "#32; #36"
 ---
-DON'T fill gaps in an operator instruction or a versioning scheme with your own default (digit padding, `-SNAPSHOT`) — ask once with proposed defaults: #32 put main on a `-SNAPSHOT` the operator never wanted (undone in #36), and #36's rule line invented `-rcN` padding that PR review blocked.
+DON'T fill gaps in an operator instruction or a versioning scheme with your own default (digit padding, `-SNAPSHOT`) — ask once with proposed defaults: #32 put main on a `-SNAPSHOT` the operator never wanted (undone in #36), and #36's rules.md/README line invented the `-alphaNN`/`-betaNN`/`-rcN` digit format, which PR review blocked.
