@@ -3,7 +3,7 @@ Kotlin Multiplatform client SDK and Compose/FDS UI for Better Auth
 
 ## Modules
 
-Group `dev.fediim.auth`, version `0.1.0-SNAPSHOT`; targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
+Group `dev.fediim.auth`, version `1.0.0-rc1`; targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
 
 | Artifact | Depends on |
 |---|---|
@@ -179,7 +179,7 @@ FediimTheme {
 - Dialogs never close themselves: stop composing them (for example on `state.isSignedIn`) and handle `onDismissRequest` (Esc). Components never collect `BetterAuthViewModel.effects` (one collector only), so you can.
 - Social buttons call `SignInSocial`, which fails with `UNEXPECTED` when the client has no `socialAuthLauncher`: pass `socialProviders = emptyList()` then.
 - Labels are English only. FDS 1.0.0 ships an `Icon` composable but no icon set, so buttons and banners are text-only.
-- Consumers also need the FDS repository `https://maven.pkg.github.com/fediim-dev/fediim-design-system` (same `gpr.user`/`gpr.key` credentials) and the Compose compiler plugin.
+- FDS is published to the same `kmp-packages` registry (see Consuming from GitHub Packages), so consumers need no extra repository; they also need the Compose compiler plugin.
 - Secrets are never in saved state and are dropped when the composition is disposed, including on an Android configuration change, by design: the password and the TOTP URI and backup codes live in composition memory; a new API key lives in `ApiKeyUiState.createdKey` (the view model's state) and `ApiKeyManagerDialog` dispatches `DismissCreatedKey` when it leaves composition. Set `FLAG_SECURE` or the platform equivalent in the host app if you need screenshot protection. Copies of the API key, TOTP URI and backup codes are marked sensitive on Android (hidden from clipboard previews on 13+) and are plain text elsewhere; the clipboard is not cleared afterwards.
 - Screenshot tests (`FdsScreenshotTest`, Roborazzi) verify 12 goldens in `better-auth-fds/screenshots/` on macOS only; re-record with `./gradlew :better-auth-fds:jvmTest -Proborazzi.test.record=true`. The Android clip entry is checked by `./gradlew :better-auth-fds:connectedAndroidDeviceTest` (needs a running emulator or device).
 
@@ -188,7 +188,7 @@ FediimTheme {
 ```kotlin
 repositories {
   maven {
-    url = uri("https://maven.pkg.github.com/fediim-dev/better-auth-kmp")
+    url = uri("https://maven.pkg.github.com/fediim-dev/kmp-packages")
     credentials {
       username = providers.gradleProperty("gpr.user").orNull
       password = providers.gradleProperty("gpr.key").orNull
@@ -205,6 +205,6 @@ repositories {
 - `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](tests/contract-harness). The harness starts Node with only `PATH`, `HOME`, the temp-dir variables, `LANG` and `SystemRoot` from the environment, plus `BETTER_AUTH_TELEMETRY=false`.
 - `./gradlew publishToMavenLocal` installs into `~/.m2` without credentials.
 - `./gradlew publishAllPublicationsToGitHubPackagesRepository` publishes; credentials from `gpr.user`/`gpr.key` or `GITHUB_ACTOR`/`GITHUB_TOKEN`.
-- CI publishes on push to `main` (snapshots) and on `v*` tags. For a release, drop `-SNAPSHOT` from `version` in `gradle.properties` (and `VERSION` in each module) before tagging.
+- CI publishes on push to `main` (snapshots) and on `v*` tags, but CI publishing to `kmp-packages` is not set up yet (its token is scoped to this repository), so releases are published locally with the task above until that is fixed. For a release, set `version` in `gradle.properties` (and `VERSION` in each module) to the release or pre-release version (`1.0.0`, `1.0.0-rc1`) before tagging.
 
 See [CONSTRAINTS.md](CONSTRAINTS.md) for architecture rules and [ai-context.md](ai-context.md) for the project map.

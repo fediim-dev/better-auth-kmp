@@ -67,7 +67,7 @@ publishing {
   repositories {
     maven {
       name = "GitHubPackages"
-      url = uri("https://maven.pkg.github.com/fediim-dev/better-auth-kmp")
+      url = uri("https://maven.pkg.github.com/fediim-dev/kmp-packages")
       credentials {
         username =
             providers
