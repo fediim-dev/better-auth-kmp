@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import dev.fediim.auth.compose.ApiKeyViewModel
 import dev.fediim.auth.compose.AuthUiIntent
 import dev.fediim.auth.compose.BetterAuthViewModel
@@ -29,6 +32,7 @@ import dev.fediim.fds.components.CodeBlock
 import dev.fediim.fds.components.SegmentedControl
 import dev.fediim.fds.components.TextField
 import dev.fediim.fds.theme.FediimTheme
+import dev.fediim.fds.tokens.FediimSize
 import dev.fediim.fds.tokens.FediimSpace
 
 /**
@@ -222,24 +226,26 @@ public fun AuthenticatedWorkspaceScreen(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(FediimSpace.Space2),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Bottom,
         ) {
           TextField(
               value = newPasskeyName,
               onValueChange = { newPasskeyName = it },
               label = "Passkey Name",
-              modifier = Modifier.weight(1f),
+              modifier = Modifier.weight(1f).testTag("sample.passkeyName"),
           )
-          Button(
-              text = "Register Passkey",
-              onClick = {
-                val name = newPasskeyName.ifBlank { "My Security Key" }
-                workspaceViewModel.registerPasskey(name)
-                newPasskeyName = ""
-              },
-              size = ButtonSize.Small,
-              variant = ButtonVariant.Secondary,
-          )
+          CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides FediimSize.Touch) {
+            Button(
+                text = "Register Passkey",
+                onClick = {
+                  val name = newPasskeyName.ifBlank { "My Security Key" }
+                  workspaceViewModel.registerPasskey(name)
+                  newPasskeyName = ""
+                },
+                size = ButtonSize.Medium,
+                variant = ButtonVariant.Secondary,
+            )
+          }
         }
       }
     }

@@ -6,12 +6,14 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import dev.fediim.auth.sample.di.SampleAppContainer
 import dev.fediim.auth.sample.presentation.ui.SampleApp
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -57,6 +59,19 @@ class SampleAppUiTest {
         onNodeWithText("Security & Keys").performClick()
         waitForIdle()
 
+        val passkeyFieldBounds =
+            onNodeWithTag("sample.passkeyName").fetchSemanticsNode().boundsInRoot
+        val registerButtonBounds =
+            onNodeWithText("Register Passkey").fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            abs(passkeyFieldBounds.bottom - registerButtonBounds.bottom) <= 1f,
+            "Expected Passkey Name input bottom (${passkeyFieldBounds.bottom}) and Register Passkey button bottom (${registerButtonBounds.bottom}) to align within 1dp",
+        )
+        assertTrue(
+            abs(registerButtonBounds.height - 44f) <= 1f,
+            "Expected Register Passkey button height (${registerButtonBounds.height}) to be 44dp",
+        )
+
         // 5. Register and delete passkey
         onNodeWithText("Register Passkey").performClick()
         until("Passkey registered") { hasText("My Security Key", substring = true) }
@@ -86,6 +101,16 @@ class SampleAppUiTest {
         // 10. Validated Live Server URL error banner
         onNodeWithText("Live Server").performClick()
         waitForIdle()
+        val urlFieldBounds = onNodeWithTag("sample.liveServerUrl").fetchSemanticsNode().boundsInRoot
+        val connectButtonBounds = onNodeWithText("Connect").fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            abs(urlFieldBounds.bottom - connectButtonBounds.bottom) <= 1f,
+            "Expected Live Server URL input bottom (${urlFieldBounds.bottom}) and Connect button bottom (${connectButtonBounds.bottom}) to align within 1dp",
+        )
+        assertTrue(
+            abs(connectButtonBounds.height - 44f) <= 1f,
+            "Expected Connect button height (${connectButtonBounds.height}) to be 44dp",
+        )
         onNodeWithText("http://127.0.0.1:3000").performTextReplacement("http://evil.example.com")
         waitForIdle()
         onNodeWithText("Connect").performClick()
