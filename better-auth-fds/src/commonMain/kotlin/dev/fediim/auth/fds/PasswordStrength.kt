@@ -11,14 +11,13 @@ import dev.fediim.fds.components.StackedBarKind
 import dev.fediim.fds.components.StackedBarSegment
 
 /**
- * The five password rules with their label and whether [password] meets each, in this order: at
- * least 8 characters, at least 12 characters, upper and lower case, a digit, a character that is
- * neither letter nor digit. Restated from the view model's scoring (AuthUiContract.kt).
+ * The four password rules with their label and whether [password] meets each, in this order: at
+ * least 8 characters, upper and lower case, a digit, a character that is neither letter nor digit.
+ * Restated from the view model's scoring (AuthUiContract.kt).
  */
 internal fun passwordRules(password: String): List<Pair<String, Boolean>> =
     listOf(
         "At least 8 characters" to (password.length >= 8),
-        "At least 12 characters" to (password.length >= 12),
         "Upper and lower case letters" to
             (password.any { it.isUpperCase() } && password.any { it.isLowerCase() }),
         "A digit" to password.any { it.isDigit() },
