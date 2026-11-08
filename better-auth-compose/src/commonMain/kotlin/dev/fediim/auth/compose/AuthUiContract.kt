@@ -139,19 +139,17 @@ internal fun BetterAuthResult<*>.toUiError(): BetterAuthError? =
     }
 
 /**
- * Password score 0..4: 0 below 8 characters, else 1 plus one point each for 12 or more characters,
- * upper and lower case letters, a digit, and a character that is neither letter nor digit (plan #7
- * L7).
+ * Password score 0..4: 0 below 8 characters, else 1 plus one point each for upper and lower case
+ * letters, a digit, and a character that is neither letter nor digit.
  */
 internal fun passwordStrength(password: String): Int {
   if (password.length < 8) return 0
   val points =
       listOf(
-              password.length >= 12,
               password.any { it.isUpperCase() } && password.any { it.isLowerCase() },
               password.any { it.isDigit() },
               password.any { !it.isLetterOrDigit() },
           )
           .count { it }
-  return 1 + points.coerceAtMost(3)
+  return 1 + points
 }

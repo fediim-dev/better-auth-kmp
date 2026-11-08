@@ -71,7 +71,7 @@ class BetterAuthDialogUiTest {
 
     onNodeWithText("Register").performClick()
     until("register") { vm.state.value.mode == AuthMode.REGISTER && hasTag(TAG_NAME) }
-    assertTrue((0..4).all { hasTag(TAG_RULE_PREFIX + it) })
+    assertTrue((0..3).all { hasTag(TAG_RULE_PREFIX + it) } && !hasTag(TAG_RULE_PREFIX + "4"))
 
     onNodeWithText("Sign in").performClick()
     until("sign in") { vm.state.value.mode == AuthMode.SIGN_IN && !hasTag(TAG_NAME) }
@@ -285,11 +285,11 @@ class BetterAuthDialogUiTest {
     val cases =
         mapOf(
             "abcdefgh" to listOf(0),
-            "abcdefghijkl" to listOf(0, 1),
-            "Abcdefgh" to listOf(0, 2),
-            "abcdefg1" to listOf(0, 3),
-            "abcdefg!" to listOf(0, 4),
-            "Ab1!" to listOf(2, 3, 4),
+            "Abcdefgh" to listOf(0, 1),
+            "abcdefg1" to listOf(0, 2),
+            "abcdefg!" to listOf(0, 3),
+            "Ab1!" to listOf(1, 2, 3),
+            "Abcdefgh1!" to listOf(0, 1, 2, 3),
         )
     var password by mutableStateOf("")
     setContent {
@@ -307,7 +307,8 @@ class BetterAuthDialogUiTest {
     for ((typed, on) in cases) {
       runOnUiThread { password = typed }
       waitForIdle()
-      for (rule in 0..4) {
+      assertTrue(!hasTag(TAG_RULE_PREFIX + "4"))
+      for (rule in 0..3) {
         val node = onNodeWithTag(TAG_RULE_PREFIX + rule)
         if (rule in on) node.assertIsOn() else node.assertIsOff()
       }

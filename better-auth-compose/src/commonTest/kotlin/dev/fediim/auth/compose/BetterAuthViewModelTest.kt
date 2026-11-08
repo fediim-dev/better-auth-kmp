@@ -74,7 +74,7 @@ class BetterAuthViewModelTest {
             "" to 0,
             "Ab1!xyz" to 0,
             "abcdefgh" to 1,
-            "abcdefghijkl" to 2,
+            "abcdefghijkl" to 1,
             "Abcdefgh" to 2,
             "abcdefg1" to 2,
             "abcdefg!" to 2,
