@@ -36,8 +36,8 @@ dependencies.
    - Existing external callers must compile without import path changes.
 5. **Verify layering and guards:**
    - Check `.fediim/guards.json` `forbiddenImports` — verify no new cross-layer imports were introduced.
-   - Run typecheck and test suite immediately:
-     `npm run typecheck && npm test`
+   - Run the `[commands]` `build` command from `fediim.toml`; the test suite
+     runs once at the verification gate.
 6. **Update documentation:**
    - Update module-level docstring and any relevant architectural entries in `CONSTRAINTS.md`.
 

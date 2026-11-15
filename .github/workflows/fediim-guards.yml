@@ -1,8 +1,17 @@
 # <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
+# Manual (Actions minutes): gh workflow run fediim-guards.yml --ref <branch> -f pr=<n>
+# The dispatch ref must be the PR branch: fetch-depth 0 there has the PR commits.
 name: fediim-guards
-on: pull_request
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+        type: number
 permissions:
   contents: read
+  pull-requests: read
 jobs:
   static-guards:
     runs-on: ubuntu-latest
@@ -14,8 +23,14 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      # One step, not $GITHUB_ENV: a PR body line matching the env-file delimiter could set NODE_OPTIONS.
       - name: Run fediim static guards
-        run: node .fediim/ci/guards.mjs
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ inputs.pr }}
+        run: |
+          export BASE_SHA="$(gh pr view "$PR" --json baseRefOid --jq .baseRefOid)"
+          export HEAD_SHA="$(gh pr view "$PR" --json headRefOid --jq .headRefOid)"
+          export PR_BODY="$(gh pr view "$PR" --json body --jq .body)"
+          node .fediim/ci/guards.mjs

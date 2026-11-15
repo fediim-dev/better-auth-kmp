@@ -1,6 +1,6 @@
 ---
 name: manifest-navigation
-description: Use when a repository has an ai-context.md or llms.txt manifest and you don't know what name to search for, the question spans modules or dependencies, you need a contract a docstring states (limits, threading, errors), or the change touches several modules — navigate the tiered AI-First Documentation manifests (project map, symbol index, signatures, file:line) instead of exploring or reading source wholesale.
+description: Use when a repo has ai-context.md or llms.txt and you must find a symbol, contract or cross-module dependency without reading source wholesale.
 ---
 
 # Skill: Manifest Navigation
@@ -13,7 +13,7 @@ Read root `ai-context.md` when the task needs a module map or a contract; skip i
 
 - **Present** → read root `ai-context.md`. It contains the L0 project map: module names, purposes, dependency edges, and pointers to `<module>/ai-context.md`. This is strictly O(modules) lines (budgeted at ≤ 2,000 tokens entry cost) and replaces exploratory directory walking entirely.
 - **Descent order** → from the root project map, identify the relevant module(s) and load only `<module>/ai-context.md` (which contains that module's L1 symbol index, L2 signatures, and L3 guardrails/recipes).
-- `llms.txt` carries the full-repo projection (L0 + merged L1) for external ecosystem consumers. Agents MUST NOT load `llms.txt` directly to preserve context window; use it only as a fallback when root `ai-context.md` is absent.
+- `llms.txt` carries the full-repo projection (L0 + merged L1) for external ecosystem consumers. Read it only when root `ai-context.md` is absent, since it costs far more context.
 - **Absent or the project is unfamiliar territory** → fall back to normal exploration, and mention to the user that the project has no AI-context manifest.
 
 ## Navigation rules
@@ -42,7 +42,7 @@ Read root `ai-context.md` when the task needs a module map or a contract; skip i
 
 - If your change alters behavior described in a docstring (errors, side effects, threading, units), **update the docstring in the same change** — you are editing the API description other agents will trust.
 - Run the project's manifest compile (`ai-docs compile` or equivalent) before finishing, so the index reflects your change.
-- Follow `contract-first-coding/SKILL.md` for any new public symbols you introduce.
+- Follow `ai-doc-authoring/SKILL.md` for any new public symbols you introduce.
 
 ## Dependencies (third-party libraries)
 

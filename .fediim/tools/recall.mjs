@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 const STEP_RE = /^([ST]\d+)\s+\x60?([^\s\x60:]+)(?::\d+(?:-\d+)?)?\x60?(?:\s+\([^)]+\))?\s*(?:::|[—–-]\s)/;
 const STEP_LIKE_RE = /^(?:[-*]\s+)?\**[ST]\d+\b/;
-const PLAN_FILE_RE = /^\.fediim\/plans\/[^/]+\.md$/;
+const PLAN_FILE_RE = /^\.fediim\/plans\/(?:archive\/)?[^/]+\.md$/;
 const stepMatch = (line) => line.replace(/^[-*]\s+/, '').replace(/^\*\*([ST]\d+)\*\*/, '$1').match(STEP_RE);
 function planFormatErrors(text) {
   const errors = [];
@@ -32,6 +32,8 @@ function planFormatErrors(text) {
     }
     if (inSection && STEP_LIKE_RE.test(line) && !stepMatch(line)) {
       errors.push('line not in planner format (\x60S<n> <path> — <change>\x60, one path per line): ' + line);
+    } else if (inSection && STEP_LIKE_RE.test(line) && /\bonly if\b/i.test(line)) {
+      errors.push('conditional step: guards Check E fails when the condition does not happen; move the file into an L<n> line or the verification step: ' + line);
     }
   }
   return errors;
@@ -40,6 +42,7 @@ function planFormatErrors(text) {
 const LESSONS = '.fediim/memory/lessons';
 const LEGACY = '.fediim/memory/lessons.md';
 const PLANS = '.fediim/plans';
+const PLAN_DIRS = [PLANS, PLANS + '/archive'];
 const VALUE_FLAGS = ['--phase', '--files', '--plan', '--limit'];
 const BOOL_FLAGS = ['--git-diff', '--assumptions', '--audit', '--fix'];
 const opt = {};
@@ -134,13 +137,15 @@ function targetFiles() {
 }
 
 function assumptionTerms() {
-  if (!existsSync(PLANS)) return [];
   const out = [];
-  for (const name of readdirSync(PLANS).filter((n) => n.endsWith('.md')).sort()) {
-    let inSection = false;
-    for (const line of read(join(PLANS, name)).split(/\r?\n/)) {
-      if (/^##\s+/.test(line)) inSection = /^##\s+Assumptions\b/.test(line);
-      else if (inSection && line.trim()) out.push(line);
+  for (const dir of PLAN_DIRS) {
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir).filter((n) => n.endsWith('.md')).sort()) {
+      let inSection = false;
+      for (const line of read(join(dir, name)).split(/\r?\n/)) {
+        if (/^##\s+/.test(line)) inSection = /^##\s+Assumptions\b/.test(line);
+        else if (inSection && line.trim()) out.push(line);
+      }
     }
   }
   return out;

@@ -6,30 +6,37 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node hooks/block-destructive.cjs",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "node hooks/block-gradle-chain.cjs",
+            "command": "node hooks/pre-bash.cjs",
             "timeout": 30
           }
         ]
       },
       {
-        "matcher": "write_to_file|replace_file_content",
+        "matcher": "write_file|edit_file|write_to_file|replace_file_content|multi_replace_file_content",
         "hooks": [
           {
             "type": "command",
-            "command": "node hooks/protect-paths.cjs",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "node hooks/block-secrets.cjs",
+            "command": "node hooks/pre-write.cjs",
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "read_file|view_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/pre-read.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node hooks/pre-invocation.cjs",
+        "timeout": 10
       }
     ],
     "Stop": [
@@ -37,6 +44,11 @@
         "type": "command",
         "command": "node hooks/tdd-stop.cjs",
         "timeout": 45
+      },
+      {
+        "type": "command",
+        "command": "node ../.fediim/tools/telemetry.mjs stop --runtime antigravity",
+        "timeout": 5
       }
     ]
   }

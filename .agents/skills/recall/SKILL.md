@@ -11,6 +11,7 @@ don't search for them.
    [--files a,b | --plan .fediim/plans/<n>.md | --git-diff] [--assumptions]
    "<2–4 keywords from the task or error>"`. It ranks lessons and prints each
    one's DO/DON'T lines; no match: widen the keywords once, then proceed.
+   `--assumptions` reads `.fediim/plans/**/*.md`, archive included.
 2. Apply the printed rules as guidance. Operator rules and `CONSTRAINTS.md`
    win; a conflict with a hard rule in `AGENTS.md` escalates.
 

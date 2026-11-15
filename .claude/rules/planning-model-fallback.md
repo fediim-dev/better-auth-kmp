@@ -9,4 +9,4 @@ on rate-limit (429) or quota errors, retry those once manually on the Claude
 fallback (`sonnet`) and say so. Never switch to Gemini here:
 `models.antigravityFallback` applies to Antigravity only.
 
-Full procedure: load the `rule-model-fallback` skill.
+Full procedure: load the `fediim-rules` skill and read `references/model-fallback.md`.

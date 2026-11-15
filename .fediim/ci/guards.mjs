@@ -2,18 +2,25 @@
 // fediim static guards — runs identically locally and in CI.
 // Diff range: BASE_SHA/HEAD_SHA env (set by the CI workflow), otherwise
 // merge-base origin/main..HEAD. Exit non-zero on any violation.
-import { execSync } from 'node:child_process';
+// --static-only skips the build/test/lint commands and the uncommitted-changes check
+// (pr-prep.mjs runs it on a freshly formatted, still uncommitted tree).
+import { execSync, execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
+const RAW = {"test":"./gradlew check -q","build":"./gradlew compileAllTargets -q","lint":""};
 const TEST_CMD = "./gradlew check -q";
 const BUILD_CMD = "./gradlew compileAllTargets -q";
 const LINT_CMD = "";
+const LIMITS = {"maxPrLines":450,"maxPrFiles":12,"maxFileLines":500};
+const STATIC_ONLY = process.argv.includes('--static-only');
 const SECRET_PATTERNS = [
   new RegExp("(?:api[_-]?key|secret|password|token)\\s*[:=]\\s*['\"][A-Za-z0-9_\\-\\/+]{12,}['\"]", "i"),
   new RegExp("-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", ""),
   new RegExp("AKIA[0-9A-Z]{16}", ""),
-  new RegExp("\\bghp_[A-Za-z0-9]{36}\\b", ""),
+  new RegExp("\\bgh[pousr]_[A-Za-z0-9]{36}\\b", ""),
+  new RegExp("\\bgithub_pat_[A-Za-z0-9_]{22,}\\b", ""),
   new RegExp("\\bsk-ant-[A-Za-z0-9_-]{20,}\\b", "")
 ];
 const PROTECTED_PREFIXES = ["auth/","billing/"];
@@ -36,6 +43,209 @@ function invisibleCodepoint(text) {
   return m ? 'U+' + m[0].codePointAt(0).toString(16).toUpperCase().padStart(4, '0') : '';
 }
 
+function makeStamp(req) {
+  const cp = req('child_process');
+  const fs = req('fs');
+  const path = req('path');
+  const git = (cwd, args, env) => cp.execFileSync('git', args, { cwd, env: env ? { ...process.env, ...env } : process.env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  const top = (cwd) => git(cwd, ['rev-parse', '--show-toplevel']);
+  const treeHash = (cwd) => {
+    let idx = '';
+    try {
+      const root = top(cwd);
+      const real = path.resolve(root, git(root, ['rev-parse', '--git-path', 'index']));
+      idx = path.resolve(root, git(root, ['rev-parse', '--git-dir']), 'fediim-idx-' + process.pid);
+      if (fs.existsSync(real)) fs.copyFileSync(real, idx);
+      const env = { GIT_INDEX_FILE: idx };
+      // Our own run state (stamp, build-slot locks, task bindings) must not change the hash.
+      git(root, ['add', '-A', '--', '.', ':(exclude).fediim/run', ':(exclude).fediim/team', ':(exclude).fediim/task-sessions'], env);
+      return git(root, ['write-tree'], env);
+    } catch (e) {
+      return '';
+    } finally {
+      if (idx) { try { fs.unlinkSync(idx); } catch (e) {} }
+    }
+  };
+  const file = (root) => path.join(root, '.fediim', 'run', 'verified.json');
+  const read = (root) => { try { return JSON.parse(fs.readFileSync(file(root), 'utf8')); } catch (e) { return null; } };
+  // True when every command passed on exactly this tree. CI never short-circuits.
+  const verifiedFor = (cwd, commands) => {
+    if (process.env.CI) return false;
+    try {
+      const v = read(top(cwd));
+      if (!v || !v.treeHash || !Array.isArray(v.commands) || !commands.every((c) => v.commands.includes(c))) return false;
+      return treeHash(cwd) === v.treeHash;
+    } catch (e) {
+      return false;
+    }
+  };
+  // ponytail: stamps the tree as it is after the pass; an edit racing the run is stamped too.
+  const record = (cwd, command) => {
+    try {
+      const root = top(cwd);
+      const after = treeHash(cwd);
+      if (!after) return;
+      const v = read(root);
+      const commands = [...new Set([...(v && v.treeHash === after ? v.commands : []), command])].sort();
+      fs.mkdirSync(path.dirname(file(root)), { recursive: true });
+      const ignore = path.join(root, '.fediim', 'run', '.gitignore');
+      if (!fs.existsSync(ignore)) fs.writeFileSync(ignore, '*\n');
+      let headSha = '';
+      try { headSha = git(root, ['rev-parse', 'HEAD']); } catch (e) {}
+      fs.writeFileSync(file(root), JSON.stringify({ treeHash: after, headSha, commands, verifiedAt: new Date().toISOString() }, null, 2) + '\n');
+    } catch (e) {}
+  };
+  return { treeHash, verifiedFor, record };
+}
+const stamp = makeStamp(createRequire(import.meta.url));
+const FILE_EXT_RE = /\.(?:[cm]?[jt]sx?|json|toml|ya?ml|md|rst|adoc|txt|kt|kts|java|py|go|rs|rb|sh|xml|gradle|properties|html?|css|sql)$/i;
+const STEP_RE = /^([ST]\d+)\s+\x60?([^\s\x60:]+)(?::\d+(?:-\d+)?)?\x60?(?:\s+\([^)]+\))?\s*(?:::|[—–-]\s)/;
+const STEP_LIKE_RE = /^(?:[-*]\s+)?\**[ST]\d+\b/;
+const PLAN_FILE_RE = /^\.fediim\/plans\/(?:archive\/)?[^/]+\.md$/;
+const stepMatch = (line) => line.replace(/^[-*]\s+/, '').replace(/^\*\*([ST]\d+)\*\*/, '$1').match(STEP_RE);
+function planFormatErrors(text) {
+  const errors = [];
+  let inSection = false;
+  for (const rawLine of String(text).split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (/^##\s+(Steps|Tests)\b/.test(line)) { inSection = true; continue; }
+    if (/^##\s+/.test(line)) { inSection = false; continue; }
+    if (/^AC:/.test(line)) {
+      for (const entry of line.slice(3).split(/[·;]/).map((e) => e.trim()).filter(Boolean)) {
+        const m = entry.match(/^(AC\d+)\s*(?:→|->)\s*(.+)$/);
+        const ids = m ? m[2].split(/[\s,]+/).filter(Boolean) : [];
+        const assumptions = ids.filter((id) => /^L\d+$/.test(id));
+        if (!m) errors.push('AC entry not in \x60AC<n>→S<n>,T<n>\x60 form: ' + entry);
+        else if (assumptions.length) errors.push(m[1] + ' maps to assumption ' + assumptions.join(',') + ', but an L<n> line never stands in for an acceptance criterion: ' + entry);
+        else if (!ids.every((id) => /^[ST]\d+$/.test(id))) errors.push(m[1] + ' must map to S<n>/T<n> ids only: ' + entry);
+      }
+      continue;
+    }
+    if (inSection && STEP_LIKE_RE.test(line) && !stepMatch(line)) {
+      errors.push('line not in planner format (\x60S<n> <path> — <change>\x60, one path per line): ' + line);
+    } else if (inSection && STEP_LIKE_RE.test(line) && /\bonly if\b/i.test(line)) {
+      errors.push('conditional step: guards Check E fails when the condition does not happen; move the file into an L<n> line or the verification step: ' + line);
+    }
+  }
+  return errors;
+}
+
+function checkPlanFile(planPath) {
+  if (!existsSync(planPath)) return ['plan file not found: ' + planPath];
+  const text = readFileSync(planPath, 'utf8');
+  const lines = text.replace(/\n$/, '').split(/\r?\n/);
+  const errors = [];
+  if (lines.length > 150) errors.push('plan is ' + lines.length + ' lines; the limit is 150 (split the issue)');
+  errors.push(...planFormatErrors(text));
+  const defined = new Set();
+  const mapped = [];
+  let hasAc = false;
+  let section = '';
+  for (const raw of lines) {
+    const line = raw.trim();
+    const heading = /^##\s+(\w+)/.exec(line);
+    if (heading) { section = heading[1]; continue; }
+    if (/^AC:/.test(line)) {
+      hasAc = true;
+      for (const entry of line.slice(3).split(/[·;]/).map((e) => e.trim()).filter(Boolean)) {
+        const m = entry.match(/^(AC\d+)\s*(?:→|->)\s*(.+)$/);
+        if (m) mapped.push(...m[2].split(/[\s,]+/).filter(Boolean).map((id) => [m[1], id]));
+      }
+      continue;
+    }
+    if (section !== 'Steps' && section !== 'Tests') continue;
+    const m = stepMatch(line);
+    if (!m) continue;
+    defined.add(m[1]);
+    const target = m[2].split('#')[0];
+    if (!(target.includes('/') || FILE_EXT_RE.test(target))) continue;
+    const creates = /\b(create|add|new|introduce)\b/i.test(line.slice(line.indexOf(m[2]) + m[2].length));
+    if (!existsSync(join(process.cwd(), target)) && !creates) errors.push(m[1] + ' targets ' + target + ', which does not exist and is not created by the plan');
+  }
+  if (!hasAc || mapped.length === 0) errors.push('plan has no AC: line mapping every acceptance criterion to S<n>/T<n> ids');
+  for (const [ac, id] of mapped) {
+    if (/^[ST]\d+$/.test(id) && !defined.has(id)) errors.push(ac + ' maps to ' + id + ', which has no line in ## Steps or ## Tests');
+  }
+  return errors;
+}
+
+const DOC_RE = /[.](md|txt|rst|adoc)$/i;
+const TEST_PATH_RE = /(^|\/)(tests?|__tests__)\/|[.](test|spec)[.]/i;
+const TEST_NAME_RE = /(^|\/)test_[^/]*[.]py$|_test[.](py|go)$|Tests?[.]kt$/;
+const LOCK_RE = /(^|\/)(package-lock[.]json|npm-shrinkwrap[.]json|pnpm-lock[.]yaml|yarn[.]lock|Cargo[.]lock|fediim[.]lock|poetry[.]lock|go[.]sum|Gemfile[.]lock|composer[.]lock)$|[.]snap$|^tests\/fixtures\/expected\//;
+const GENERATED_RE = /(^|\/)(dist|build|out|coverage|node_modules|generated|__generated__)\/|[.](min[.](js|css)|generated[.]\w+)$|^[.](claude|agents|fediim)\/|^[.]github\/workflows\/fediim-|^(AGENTS|CLAUDE|GEMINI)[.]md$/;
+const SOURCE_EXT_RE = /[.](?:[cm]?[jt]sx?|vue|svelte|kts?|java|py|go|rs|rb|swift|c|cc|cpp|h|hpp|cs|php|sh)$/;
+const isTestFile = (file) => TEST_PATH_RE.test(file) || TEST_NAME_RE.test(file);
+const isLockFile = (file) => LOCK_RE.test(file);
+const isGeneratedFile = (file) => GENERATED_RE.test(file);
+const isSourceFile = (file) => SOURCE_EXT_RE.test(file) && !isTestFile(file) && !isLockFile(file) && !isGeneratedFile(file);
+const SECURITY_PATH_RE = /(^|\/)(auth|authn|authz|authentication|authorization|oauth2?|rbac|tenan\w+|billing|payments?|secrets?|credentials?|migrations?)(\/|[.\-_]|$)|^[.]github\/(workflows|actions)\/|(^|\/)(jenkinsfile|[.]gitlab-ci[.]ya?ml)$|^[.](husky|githooks)\/|^[.](claude|agents|fediim)\/(hooks|settings)/i;
+// Generic "hooks" dirs (React src/hooks) are not security paths; only git and agent hook dirs are.
+const SECURITY_LABELS = ['security', 'safety-critical', 'needs-human-approval'];
+const MODULE_ROOTS = ['src', 'lib', 'app', 'apps', 'packages', 'modules', 'internal', 'pkg', 'sources', 'services'];
+const moduleOf = (file) => {
+  const parts = file.split('/');
+  if (parts.length === 1) return '.';
+  return MODULE_ROOTS.includes(parts[0].toLowerCase()) && parts.length > 2 ? parts[0] + '/' + parts[1] : parts[0];
+};
+const isPlanFile = (file) => /^[.]fediim\/plans\//.test(file);
+const isDocFile = (file) => DOC_RE.test(file) || isPlanFile(file);
+const touchesProtected = (file) => {
+  const lower = file.toLowerCase();
+  return PROTECTED_PREFIXES.some((p) => lower.startsWith(p)) || BLOCKED_PREFIXES.some((p) => lower.startsWith(p));
+};
+function classify(rows, labels) {
+  const security = [];
+  const counted = new Map();
+  for (const { file, lines } of rows) {
+    if (touchesProtected(file) || (!isDocFile(file) && !TEST_PATH_RE.test(file) && SECURITY_PATH_RE.test(file))) security.push(file);
+    if (isDocFile(file) || TEST_PATH_RE.test(file)) continue;
+    counted.set(file, (counted.get(file) || 0) + lines);
+  }
+  const labelHit = (labels || []).some((l) => SECURITY_LABELS.includes(String(l).toLowerCase()));
+  const nonTestFiles = counted.size;
+  const nonTestLines = [...counted.values()].reduce((a, b) => a + b, 0);
+  const modules = [...new Set([...counted.keys()].map(moduleOf))].sort();
+  let tier;
+  if (security.length > 0 || labelHit) tier = 4;
+  else if (rows.length > 0 && nonTestFiles === 0 && rows.every((r) => isDocFile(r.file))) tier = 0;
+  else if (nonTestFiles > 5 || modules.length > 1) tier = 3;
+  else if (nonTestFiles <= 2 && nonTestLines <= 40) tier = 1;
+  else tier = 2;
+  return { tier, nonTestFiles, nonTestLines, modules, security: [...new Set(security)].sort() };
+}
+function planScope(text, implicit) {
+  const named = new Set();
+  const justified = [];
+  let section = '';
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim();
+    const heading = /^##\s+(\w+)/.exec(line);
+    if (heading) { section = heading[1]; continue; }
+    if (/^(?:[-*]\s+)?\**L\d+\b/.test(line)) { justified.push(line); continue; }
+    if (section !== 'Steps' && section !== 'Tests') continue;
+    const m = stepMatch(line);
+    if (m) named.add(m[2].replace(/\\/g, '/').replace(/^\.\//, ''));
+  }
+  const implied = (implicit || []).filter((r) => [...named].some((p) => r.when.test(p))).flatMap((r) => r.implies);
+  return { paths: [...named, ...implied.map(String)], justified };
+}
+const inPlanScope = (scope, file) => scope.paths.some((p) => file === p || file.startsWith(p.replace(/\/+$/, '') + '/')) || scope.justified.some((l) => l.includes(file));
+// The plan of a branch named after its issue number: .fediim/plans/<n>.md or archive/<n>.md.
+const branchPlans = (branch, exists) => {
+  const n = /\d+/.exec(branch || '');
+  return n ? ['.fediim/plans/' + n[0] + '.md', '.fediim/plans/archive/' + n[0] + '.md'].filter(exists) : [];
+};
+
+// M85: mechanical plan gate (Tier 2): no git, no LLM.
+if (process.argv.includes('--check-plan')) {
+  const planPath = process.argv[process.argv.indexOf('--check-plan') + 1];
+  if (!planPath) { console.error('[fediim-guards] --check-plan needs a plan path'); process.exit(2); }
+  const planErrors = checkPlanFile(planPath);
+  for (const e of planErrors) console.error('[fediim-guards] FAIL: plan ' + planPath + ': ' + e);
+  if (planErrors.length === 0) console.log('[fediim-guards] plan ' + planPath + ' passed the mechanical plan gate.');
+  process.exit(planErrors.length > 0 ? 1 : 0);
+}
 // Self-test runner
 if (process.argv.includes('--test')) {
   const testScript = join(process.cwd(), '.fediim', 'ci', 'guards-test.mjs');
@@ -68,7 +278,7 @@ log('diff range ' + base.slice(0, 12) + '..' + (head === 'HEAD' ? 'HEAD' : head.
 
 // Local run (no HEAD_SHA): the diff only sees commits, so uncommitted code
 // would pass unchecked. Docs-only dirt is harmless.
-if (!process.env.HEAD_SHA) {
+if (!process.env.HEAD_SHA && !STATIC_ONLY) {
   const dirty = execSync('git status --porcelain --untracked-files=all', { encoding: 'utf8' })
     .split('\n').filter(Boolean)
     .map((l) => l.slice(3).split(' -> ').pop().replace(/^"|"$/g, ''))
@@ -153,12 +363,53 @@ for (const file of changedFiles) {
   }
 }
 
+// (D0) M88: plan scope, PR budget and file-size ratchet. One classifier (isSourceFile)
+// decides what counts: tests, lockfiles/goldens, generated files and docs never do.
+const gitText = (ref, file) => { try { return execFileSync('git', ['show', ref + ':' + file], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; } };
+const countLines = (text) => (text === '' ? 0 : text.replace(/\n$/, '').split('\n').length);
+{
+  const sourceRows = sh('git diff --numstat --no-renames ' + base + ' ' + head).split('\n').filter(Boolean)
+    .map((row) => { const [add, del, ...rest] = row.split('\t'); return { file: rest.join('\t'), lines: (Number(add) || 0) + (Number(del) || 0) }; })
+    .filter((r) => isSourceFile(r.file));
+  const planFiles = [...new Set([...changedFiles.filter((f) => PLAN_FILE_RE.test(f) && existsSync(join(process.cwd(), f))), ...branchPlans(branch, (f) => existsSync(join(process.cwd(), f)))])].sort();
+  const planTexts = planFiles.map((f) => readFileSync(join(process.cwd(), f), 'utf8'));
+  if (planTexts.length > 0) {
+    let implicit = [];
+    try { implicit = (JSON.parse(readFileSync(guardsPath, 'utf8')).implicitSharedFiles || []).map((r) => ({ when: new RegExp(r.when), implies: r.implies })); } catch {}
+    const scopes = planTexts.map((t) => planScope(t, implicit));
+    for (const { file } of sourceRows) {
+      if (!scopes.some((s) => inPlanScope(s, file))) fail('diff is not within the plan: ' + file + ' is named by no S<n>/T<n> line of ' + planFiles.join(', ') + ' (add an S<n> line, justify it in an L<n> line, or revert it)');
+    }
+  }
+  const prLines = sourceRows.reduce((n, r) => n + r.lines, 0);
+  const prFiles = sourceRows.length;
+  const summary = prLines + ' non-test source lines in ' + prFiles + ' files';
+  if (prLines > LIMITS.maxPrLines || prFiles > LIMITS.maxPrFiles) {
+    if (planTexts.some((t) => /^##\s+Split Waiver\b/m.test(t))) log('PR budget exceeded (' + summary + ') but the plan carries ## Split Waiver');
+    else fail('PR budget exceeded: ' + summary + ' (limits ' + LIMITS.maxPrLines + ' lines, ' + LIMITS.maxPrFiles + ' files): split the issue, or add a "## Split Waiver" section to the plan naming why it cannot split');
+  } else if (prLines > 250 || prFiles > 8) {
+    log('warning: large PR (' + summary + '); consider splitting before it reaches ' + LIMITS.maxPrLines + ' lines or ' + LIMITS.maxPrFiles + ' files');
+  }
+  for (const { file } of sourceRows) {
+    const now = gitText(head, file);
+    if (now === null) continue;
+    const nowLines = countLines(now);
+    if (nowLines <= LIMITS.maxFileLines) continue;
+    const before = gitText(base, file);
+    if (before === null) fail('new source file ' + file + ' has ' + nowLines + ' lines (limit ' + LIMITS.maxFileLines + '): split it into smaller modules');
+    else if (nowLines > countLines(before)) fail(file + ' is over ' + LIMITS.maxFileLines + ' lines (' + countLines(before) + ' -> ' + nowLines + ') and grew: move code out instead of adding to it');
+  }
+}
+
 // (D) Project verification commands (baked from fediim.toml [commands]).
 // M53: a docs-only diff (memory, lessons, plans, READMEs) skips them.
 const docsOnly = changedFiles.length > 0 && changedFiles.every((f) => /[.](md|txt|rst|adoc)$/i.test(f));
 for (const [name, cmd] of [['test', TEST_CMD], ['build', BUILD_CMD], ['lint', LINT_CMD]]) {
   if (!cmd) { log('skip ' + name + ' (no command configured)'); continue; }
   if (docsOnly) { log('skip ' + name + ' (docs-only diff)'); continue; }
+  if (STATIC_ONLY) { log('skip ' + name + ' (--static-only)'); continue; }
+  // M87: run.mjs / pr-prep.mjs stamped this exact tree as passing (never when CI is set).
+  if (stamp.verifiedFor(process.cwd(), [RAW[name]])) { log('skip ' + name + ' (tree verified)'); continue; }
   log('run ' + name + ': ' + cmd);
   try {
     execSync(cmd, { stdio: 'inherit' });
@@ -200,36 +451,27 @@ if (existsSync(assumptionsPath)) {
 // malformed S<n>/T<n> line or an AC mapped to an L<n> assumption fails here,
 // not at the merge gate. Plan-to-diff coverage (every path an S<n>/T<n> line
 // names is in changedFiles) waits for the code, so a docs-only diff skips it.
-const FILE_EXT_RE = /\.(?:[cm]?[jt]sx?|json|toml|ya?ml|md|rst|adoc|txt|kt|kts|java|py|go|rs|rb|sh|xml|gradle|properties|html?|css|sql)$/i;
-const STEP_RE = /^([ST]\d+)\s+\x60?([^\s\x60:]+)(?::\d+(?:-\d+)?)?\x60?(?:\s+\([^)]+\))?\s*(?:::|[—–-]\s)/;
-const STEP_LIKE_RE = /^(?:[-*]\s+)?\**[ST]\d+\b/;
-const PLAN_FILE_RE = /^\.fediim\/plans\/[^/]+\.md$/;
-const stepMatch = (line) => line.replace(/^[-*]\s+/, '').replace(/^\*\*([ST]\d+)\*\*/, '$1').match(STEP_RE);
-function planFormatErrors(text) {
-  const errors = [];
-  let inSection = false;
-  for (const rawLine of String(text).split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (/^##\s+(Steps|Tests)\b/.test(line)) { inSection = true; continue; }
-    if (/^##\s+/.test(line)) { inSection = false; continue; }
-    if (/^AC:/.test(line)) {
-      for (const entry of line.slice(3).split(/[·;]/).map((e) => e.trim()).filter(Boolean)) {
-        const m = entry.match(/^(AC\d+)\s*(?:→|->)\s*(.+)$/);
-        const ids = m ? m[2].split(/[\s,]+/).filter(Boolean) : [];
-        const assumptions = ids.filter((id) => /^L\d+$/.test(id));
-        if (!m) errors.push('AC entry not in \x60AC<n>→S<n>,T<n>\x60 form: ' + entry);
-        else if (assumptions.length) errors.push(m[1] + ' maps to assumption ' + assumptions.join(',') + ', but an L<n> line never stands in for an acceptance criterion: ' + entry);
-        else if (!ids.every((id) => /^[ST]\d+$/.test(id))) errors.push(m[1] + ' must map to S<n>/T<n> ids only: ' + entry);
-      }
-      continue;
-    }
-    if (inSection && STEP_LIKE_RE.test(line) && !stepMatch(line)) {
-      errors.push('line not in planner format (\x60S<n> <path> — <change>\x60, one path per line): ' + line);
-    }
-  }
-  return errors;
+const headSlug = (h) => h.trim().toLowerCase().replace(/[^\w\- ]/g, '').replace(/ /g, '-');
+function anchorResolves(path, id) {
+  let doc;
+  try { doc = execSync('git show ' + head + ':' + path, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return false; }
+  return doc.split('\n').some((l) => {
+    const h = /^#{1,6}\s+(.*?)\s*#*\s*$/.exec(l);
+    return (h && headSlug(h[1]) === id) || (l.startsWith(id) && !/\w/.test(l.charAt(id.length)));
+  });
 }
-
+function checkTarget(planFile, lineId, target) {
+  const hash = target.indexOf('#');
+  const targetPath = hash < 0 ? target : target.slice(0, hash);
+  const anchor = hash < 0 ? '' : target.slice(hash + 1);
+  const isFilePath = targetPath.includes('/') || FILE_EXT_RE.test(targetPath);
+  if (!isFilePath) return;
+  if (!changedFiles.includes(targetPath)) {
+    fail('plan ' + planFile + ' ' + lineId + ' targets ' + targetPath + ' but the diff does not touch it');
+  } else if (anchor && !anchorResolves(targetPath, anchor)) {
+    fail('plan ' + planFile + ' ' + lineId + ' anchor #' + anchor + ' does not resolve in ' + targetPath + ' at the head version');
+  }
+}
 const addedPlans = sh('git diff --name-only --no-renames --diff-filter=A ' + base + ' ' + head)
   .split('\n').filter((f) => PLAN_FILE_RE.test(f));
 for (const planFile of addedPlans) {
@@ -237,20 +479,23 @@ for (const planFile of addedPlans) {
   if (!existsSync(absPlan)) continue;
   const text = readFileSync(absPlan, 'utf8');
   for (const err of planFormatErrors(text)) fail('plan ' + planFile + ' ' + err);
+  if (text.replace(/\n$/, '').split('\n').length > 150) log('warning: plan ' + planFile + ' is over 150 lines; keep plans lean');
   if (docsOnly) continue;
-  let inSection = false;
+  let section = '';
   for (const rawLine of text.split('\n')) {
     const line = rawLine.trim();
-    if (/^##\s+(Steps|Tests)\b/.test(line)) { inSection = true; continue; }
-    if (/^##\s+/.test(line)) { inSection = false; continue; }
-    if (!inSection) continue;
+    const heading = /^##\s+(Steps|Tests|Interfaces)\b/.exec(line);
+    if (heading) { section = heading[1]; continue; }
+    if (/^##\s+/.test(line)) { section = ''; continue; }
+    if (!section) continue;
+    if (section === 'Interfaces') {
+      const seam = /^(?:[-*]\s+)?\**(I\d+)\**\s+`([^`]*)`/.exec(line);
+      if (seam && seam[2].includes('#')) checkTarget(planFile, seam[1], seam[2]);
+      continue;
+    }
     const m = stepMatch(line);
     if (!m) continue;
-    const targetPath = m[2];
-    const isFilePath = targetPath.includes('/') || FILE_EXT_RE.test(targetPath);
-    if (isFilePath && !changedFiles.includes(targetPath)) {
-      fail('plan ' + planFile + ' ' + m[1] + ' targets ' + targetPath + ' but the diff does not touch it');
-    }
+    checkTarget(planFile, m[1], m[2]);
   }
 }
 
@@ -278,6 +523,28 @@ if (prBody) {
         }
       }
     }
+  }
+}
+
+// (G) Tier enforcement (M85). The PR declares "Tier: <0-4>" ("Fast-path: trivial"
+// is an alias for Tier 1). A declared Tier 0/1 whose diff classifies higher
+// needs a plan in the diff (promotion to Tier 2); a security or protected-path
+// touch (Tier 4) needs security-reviewer evidence: the PR-body line
+// "Security review: VERDICT: pass" (CI cannot read PR comments) or the
+// approval marker. The classifier is the one triage-task.mjs uses.
+const declaredMatch = /^\s*Tier:\s*([0-4])\b/im.exec(prBody);
+const declaredTier = declaredMatch ? Number(declaredMatch[1]) : (/^\s*Fast-path:\s*trivial\b/im.test(prBody) ? 1 : null);
+{
+  const rows = sh('git diff --numstat --no-renames ' + base + ' ' + head).split('\n').filter(Boolean).map((row) => {
+    const [add, del, ...rest] = row.split('\t');
+    return { file: rest.join('\t'), lines: (Number(add) || 0) + (Number(del) || 0) };
+  });
+  const actual = classify(rows, []);
+  if (declaredTier !== null && declaredTier < 2 && actual.tier >= 2 && !changedFiles.some((f) => PLAN_FILE_RE.test(f))) {
+    fail('Tier ' + declaredTier + ' declared but the diff classifies as Tier ' + actual.tier + ' (' + actual.nonTestFiles + ' non-test files, ' + actual.nonTestLines + ' non-test lines): commit .fediim/plans/<n>.md to promote it to Tier 2, or split the change');
+  }
+  if (actual.security.length > 0 && !/^\s*Security review:\s*VERDICT:\s*pass\b/im.test(prBody) && !existsSync(approvalPath)) {
+    fail('Tier 4: ' + actual.security.slice(0, 3).join(', ') + ' touched without security-reviewer approval (PR body line "Security review: VERDICT: pass", or ' + approvalPath + ')');
   }
 }
 

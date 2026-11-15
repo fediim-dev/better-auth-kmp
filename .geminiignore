@@ -1,0 +1,23 @@
+# fediim:start
+# Managed by fediim: edits inside this block are overwritten; add your own entries outside it.
+# Lockfiles, snapshots and generated maps: high token cost, low signal.
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+Cargo.lock
+gradle.lockfile
+fediim.lock
+*.snap
+*.min.js
+*.map
+.fediim/plans/archive/
+# Ephemeral build and runtime trees.
+.fediim/worktrees/
+.fediim/run/
+.fediim/task-sessions/
+dist/
+build/
+.gradle/
+.kotlin/
+coverage/
+# fediim:end

@@ -16,6 +16,19 @@ description: Use when receiving code review feedback, before implementing sugges
 5. **RESPOND:** Give a concise technical acknowledgment (`Fixed in <file:line>`) or reasoned technical pushback citing code/tests — never performative praise (`"You're absolutely right!"`, `"Great point!"`, `"Thanks!"`).
 6. **IMPLEMENT:** Apply valid fixes in priority order (blocking/security → simple → complex). In `/deliver` Phase 7 review cycles, run the formatter and compile (`[commands]` build) before pushing; the full test suite runs once at the verification/merge gate.
 
+## Forbidden Responses
+
+**NEVER:**
+- "You're absolutely right!" (performative)
+- "Great point!" / "Excellent feedback!" (performative)
+- "Let me implement that now" (before verification)
+
+**INSTEAD:**
+- Restate the technical requirement
+- Ask clarifying questions
+- Push back with technical reasoning if wrong
+- Just start working (actions > words)
+
 ## When to Push Back
 
 Push back with concrete evidence (`file:line`, test cases, `CONSTRAINTS.md`, or `## Assumptions`) when a suggestion:
@@ -25,6 +38,18 @@ Push back with concrete evidence (`file:line`, test cases, `CONSTRAINTS.md`, or 
 - Conflicts with prior operator decisions in `.fediim/memory/rules.md` or `CONSTRAINTS.md`
 
 If your pushback turns out to be wrong after checking, state the factual correction concisely and implement the fix.
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Performative agreement | State requirement or just act |
+| Blind implementation | Verify against codebase first |
+| Batch without checking | One at a time, compile each |
+| Assuming reviewer is right | Check if breaks things |
+| Avoiding pushback | Technical correctness > comfort |
+| Partial implementation | Clarify all items first |
+| Can't verify, proceed anyway | State limitation, ask for direction |
 
 ## GitHub Thread Replies
 

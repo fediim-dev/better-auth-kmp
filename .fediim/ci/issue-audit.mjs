@@ -42,6 +42,20 @@ if (priorityLabels.length !== 1) {
   missing.push('MISSING: exactly one priority:P0–P3 label (found ' + priorityLabels.length + ')');
 }
 
+// M81: a ## Session Profile must not name a retired model.
+const RETIRED_MODELS = ['claude-opus-4-6', 'claude-sonnet-4-5', 'gemini-2.5-pro', 'gemini-3.5-flash-lite', 'pro', 'flash'];
+const profileAt = lines.indexOf('## Session Profile');
+if (profileAt !== -1) {
+  const end = lines.findIndex((l, i) => i > profileAt && l.startsWith('## '));
+  const section = lines.slice(profileAt + 1, end === -1 ? undefined : end);
+  for (const l of section) {
+    const m = /^model\s*=\s*["']([^"']+)["']/.exec(l);
+    if (m && RETIRED_MODELS.includes(m[1])) {
+      missing.push('RETIRED MODEL: ' + m[1] + ' in ## Session Profile (use claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5, claude-fable-5-2, gemini-4-carbon, gemini-4-argon, gemini-4-hydrogen or gemini-3.8-flash)');
+    }
+  }
+}
+
 if (missing.length > 0) {
   console.log('issue-audit: FAIL — this issue does not carry the mandatory structure.');
   for (const m of missing) console.log(m);
