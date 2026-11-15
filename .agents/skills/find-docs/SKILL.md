@@ -21,14 +21,14 @@ Context7 CLI. It needs no MCP server.
    (High/Medium) and benchmark score. Skip this step if you already have an
    ID in `/org/project` form; use `/org/project/<version>` for a specific
    version.
-2. **Fetch the docs.**
+3. **Fetch the docs.**
    `npx ctx7@0.8.2 docs <libraryId> "<one specific question>"`
    Ask one concept per call; split a question that covers several topics.
-3. **Answer from what you fetched**, and say so when the docs don't cover it.
+4. **Answer from what you fetched**, and say so when the docs don't cover it.
 
 ## Limits
 
-- At most 3 ctx7 commands per question.
+- Stop once the fetched docs answer the question; if a refined query still misses, say the docs don't cover it.
 - ctx7 needs Node ≥ 22.13; on an older Node, say so instead of retrying.
 - Never put API keys, passwords or other secrets in a query.
 - On a quota error, tell the operator and suggest `npx ctx7@0.8.2 login` or

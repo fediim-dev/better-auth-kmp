@@ -1,18 +1,25 @@
 # <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
+# Manual (Actions minutes): gh workflow run fediim-issue-audit.yml -f number=<n>
 name: fediim-issue-audit
 on:
-  issues:
-    types: [opened, edited, reopened]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Issue number
+        required: true
+        type: number
 permissions:
   issues: write
   contents: read
 jobs:
   audit:
+    # Dispatch only from main, so the write token runs main's audit script.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      ISSUE_NUM: ${{ github.event.issue.number }}
+      ISSUE_NUM: ${{ inputs.number }}
       MARKER: "<!-- fediim:issue-audit -->"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -20,11 +27,14 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      - name: Fetch the issue
+        run: |
+          gh api "repos/$GH_REPO/issues/$ISSUE_NUM" --jq '{issue: .}' > issue-event.json
       - name: Audit issue structure
         id: audit
         run: |
           set +e
-          node .fediim/ci/issue-audit.mjs "$GITHUB_EVENT_PATH" > audit.txt
+          node .fediim/ci/issue-audit.mjs issue-event.json > audit.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
           cat audit.txt
       - name: Label and comment on a thin issue

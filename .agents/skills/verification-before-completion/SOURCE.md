@@ -6,4 +6,5 @@ Vendored from [obra/superpowers](https://github.com/obra/superpowers) v7.0.1,
 ## Local changes
 
 - description shortened to its trigger (fediim M34)
-- condensed rationalisation tables and conversational filler while preserving the 5-step iron-law gate (fediim M60)
+- restored red-flag/rationalization tables (fediim M71)
+- condensed conversational filler while preserving the 5-step iron-law gate (fediim M60)

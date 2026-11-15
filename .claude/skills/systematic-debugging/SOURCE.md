@@ -10,4 +10,5 @@ Vendored from [obra/superpowers](https://github.com/obra/superpowers) v7.0.1,
 - "your human partner" → "the operator"
 - description shortened to its trigger (fediim M34)
 - omitted: CREATION-LOG.md and test-*.md (upstream authoring artefacts)
-- condensed verbose examples/rationalisation tables and aligned verification commands with `lean-delivery` (M52) and `.fediim/plans/<n>.md` (fediim M60)
+- restored red-flag/rationalization tables (fediim M71)
+- condensed verbose examples and aligned verification commands with `lean-delivery` (M52) and `.fediim/plans/<n>.md` (fediim M60)

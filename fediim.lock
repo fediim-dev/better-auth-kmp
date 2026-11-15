@@ -1,9 +1,9 @@
 version = 1
-cliVersion = "0.2.0"
+cliVersion = "0.5.9"
 
 [[pack]]
 id = "coding/ai-first-docs"
-version = "1.7.0"
+version = "1.9.0"
 
 [[pack]]
 id = "coding/architecture-boundaries"
@@ -23,7 +23,7 @@ version = "1.3.0"
 
 [[pack]]
 id = "coding/output-discipline"
-version = "1.4.0"
+version = "1.5.0"
 
 [[pack]]
 id = "coding/project-docs"
@@ -35,27 +35,27 @@ version = "1.2.0"
 
 [[pack]]
 id = "personas/implementer"
-version = "1.3.0"
+version = "1.6.2"
 
 [[pack]]
 id = "personas/plan-reviewer"
-version = "1.6.0"
+version = "2.0.0"
 
 [[pack]]
 id = "personas/planner"
-version = "1.6.0"
+version = "1.10.1"
 
 [[pack]]
 id = "personas/pr-reviewer"
-version = "1.7.0"
+version = "2.0.0"
 
 [[pack]]
 id = "personas/security-reviewer"
-version = "1.1.0"
+version = "2.0.0"
 
 [[pack]]
 id = "planning/assumptions-ledger"
-version = "1.7.0"
+version = "1.8.0"
 
 [[pack]]
 id = "planning/autonomous-loop"
@@ -63,19 +63,19 @@ version = "1.4.0"
 
 [[pack]]
 id = "planning/budgets"
-version = "1.7.0"
+version = "1.8.0"
 
 [[pack]]
 id = "planning/constraints-register"
-version = "1.4.0"
+version = "1.5.0"
 
 [[pack]]
 id = "planning/deliver-loop"
-version = "1.1.0"
+version = "1.4.0"
 
 [[pack]]
 id = "planning/git-workflow"
-version = "1.13.0"
+version = "1.14.0"
 
 [[pack]]
 id = "planning/human-gates"
@@ -83,15 +83,11 @@ version = "1.6.0"
 
 [[pack]]
 id = "planning/implementation-delegation"
-version = "1.3.0"
-
-[[pack]]
-id = "planning/implementation-delegation-antigravity"
-version = "1.3.0"
+version = "2.0.0"
 
 [[pack]]
 id = "planning/inbox-digest"
-version = "1.4.0"
+version = "1.5.0"
 
 [[pack]]
 id = "planning/intake"
@@ -99,7 +95,7 @@ version = "1.2.0"
 
 [[pack]]
 id = "planning/issue-structure"
-version = "1.5.0"
+version = "1.6.0"
 
 [[pack]]
 id = "planning/learned-rules"
@@ -107,35 +103,31 @@ version = "1.5.0"
 
 [[pack]]
 id = "planning/model-fallback"
-version = "2.3.1"
-
-[[pack]]
-id = "planning/model-fallback-antigravity"
-version = "1.1.0"
+version = "3.0.0"
 
 [[pack]]
 id = "planning/parallel-dispatch"
-version = "1.6.0"
+version = "1.8.0"
 
 [[pack]]
 id = "planning/plan-breadth"
-version = "1.4.0"
+version = "1.6.0"
 
 [[pack]]
 id = "planning/review-quorum"
-version = "1.12.0"
+version = "1.14.1"
 
 [[pack]]
 id = "planning/self-eval"
-version = "1.2.0"
+version = "1.3.0"
 
 [[pack]]
 id = "planning/spec-lock"
-version = "1.7.0"
+version = "1.8.0"
 
 [[pack]]
 id = "planning/verification-gates"
-version = "1.6.0"
+version = "1.7.0"
 
 [[pack]]
 id = "security/no-hardcoded-secrets"
@@ -143,7 +135,7 @@ version = "1.2.0"
 
 [[pack]]
 id = "security/protected-paths"
-version = "1.5.0"
+version = "1.6.0"
 
 [[pack]]
 id = "security/untrusted-task-inputs"
@@ -151,63 +143,83 @@ version = "1.5.0"
 
 [[file]]
 path = ".agents/agents/implementer.md"
-hash = "cbd3b320cff82a22964b44d9a1ac2c6c2155f2e1dd0941ca9f404fdae883dd6a"
+hash = "a8792aed3efddfe08e23351a7eda9174368991f1ff96cf09449159547a412202"
 packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".agents/agents/plan-reviewer.md"
-hash = "bf5418b25be0bc4e0b9c86e0be8027a0fb6fddf670853d3edc599b9130e50773"
+hash = "7c4618f953754c07f08e1e7788be9f7a31e131886421630737fd532f5ec36b78"
 packs = [ "personas/plan-reviewer" ]
 
 [[file]]
 path = ".agents/agents/planner.md"
-hash = "095fd646bf8b63db8af64c2ebdcc852d9dcb26af76924a56c6849cd46052d0b7"
+hash = "b17c7999c4a19e543a473e9fc41840269da69b1f396293ed6069b6d4a35649d2"
 packs = [ "personas/planner" ]
 
 [[file]]
 path = ".agents/agents/pr-reviewer.md"
-hash = "68bbfcc04e4410c0b6b79645e7e781d8c411c3a40313270e8ced299ba1bc0592"
+hash = "c1787b92057edd4f64b6e2cdc8e9df004439809aa45862ac93cb027efc7eae43"
 packs = [ "personas/pr-reviewer" ]
 
 [[file]]
 path = ".agents/agents/security-reviewer.md"
-hash = "bc68b4252b439821952fa25d9409e7d798ce75bf0dcf619474326bc5aaa2ab0c"
+hash = "164aaab052df2a9dd505c3c0940c01ff9b84dbd35df1d70418bd458dd1ed332e"
 packs = [ "personas/security-reviewer" ]
 
 [[file]]
 path = ".agents/hooks.json"
-hash = "571f6a87f08c65157e750d479346f446f1ada25b12cc87e81a4d37f625b03ede"
+hash = "cfed2d70acb2790a18ab02e0c4e5a58285909f7787d43fb0e3b6657ae5ce8dbf"
 packs = []
 
 [[file]]
-path = ".agents/hooks/block-destructive.cjs"
-hash = "00ef4d8ebfb909408d427edea81767f9f26cd862b44dc3b3fd5a4bcc6b2b4167"
+path = ".agents/hooks/pre-bash.cjs"
+hash = "6805ba5898ea2f8254e782822ba336b4c574d2ce9c6991bbf931e07a9d44cc2d"
 packs = []
 
 [[file]]
-path = ".agents/hooks/block-gradle-chain.cjs"
-hash = "c541a55f921a78c22b259304b293300946d8b8bcab5cd37e936d1ce6d2eb779a"
+path = ".agents/hooks/pre-invocation.cjs"
+hash = "4827561960b3066035f6a551c7c25d042c0a9ac722fe407ca14eb96aca6d861a"
 packs = []
 
 [[file]]
-path = ".agents/hooks/block-secrets.cjs"
-hash = "832d77deb5995d64aaf60d1d3ed756142c686ab087b67cf00c22dfdcc0513869"
-packs = [ "security/no-hardcoded-secrets" ]
+path = ".agents/hooks/pre-read.cjs"
+hash = "7f52a1d3e76f68cdbd3fbe4acb9f916b811030747479af58cc2df4dc2ddf0cf3"
+packs = []
 
 [[file]]
-path = ".agents/hooks/protect-paths.cjs"
-hash = "f68a76bbf3b08a0426714d73927bce91dda935fdf4098910ce2c739ca9cd7fb6"
-packs = [ "security/protected-paths" ]
+path = ".agents/hooks/pre-write.cjs"
+hash = "187885e36f31e0d906e86b45e476a272262e3b61706a3804720ee35f443180c5"
+packs = [ "security/no-hardcoded-secrets", "security/protected-paths" ]
 
 [[file]]
 path = ".agents/hooks/tdd-stop.cjs"
-hash = "58025dba5aae15774786c33019a1f6e19184826a7d7ed0ac91008bb42546cc9e"
+hash = "6f8deed0d16a8e637aa13d462460218c99bd32ea215828d69a6e3548dd06471b"
 packs = [ "coding/tdd-gate" ]
 
 [[file]]
-path = ".agents/rules/coding-tdd-gate.md"
-hash = "ad7af7396d4c0182b74172b1f2afed66431d9ac1a49c1308a1455dcb99a8c68d"
-packs = [ "coding/tdd-gate" ]
+path = ".agents/rules/fediim-lesson-grep-source-for-bumped-version.md"
+hash = "1ecf2c2c7be2cf4113a79ef6b992122e2562762ce6131118bc863b3d689a1b2f"
+packs = []
+
+[[file]]
+path = ".agents/rules/fediim-lesson-implementer-uses-plan-s-paths.md"
+hash = "1367652f776135fbdb129e20a52605ad6893429dffde0223fe9fcb9d399fda66"
+packs = []
+
+[[file]]
+path = ".agents/rules/fediim-lesson-name-the-ui-test-seam.md"
+hash = "0588dfbaf7103d351697ab1eebf521ba85729cc6d2a3119ff93c0cb2716ce757"
+packs = []
+
+[[file]]
+path = ".agents/rules/fediim-lesson-resolve-new-artifacts-before-approval.md"
+hash = "03c64fb3f6844816c11883f5165186918914818b783e9f6bd939ed6d0a972a03"
+packs = []
+
+[[file]]
+path = ".agents/rules/fediim-lesson-verify-already-done-against-defaults.md"
+hash = "8b440013b8cdbd18f6aefdbfd5a8a4136c0e753d519c73c98625d64177fb2616"
+packs = []
 
 [[file]]
 path = ".agents/rules/learned.md"
@@ -215,48 +227,98 @@ hash = "426a9f47476d00a4ce14c02d4741ee6815d4bda945b353d4827ab8ac1e4ec15b"
 packs = [ "planning/learned-rules" ]
 
 [[file]]
-path = ".agents/rules/planning-human-gates.md"
-hash = "7b813627c2878ee50c6a80b55ea56b0936bbc9945f7ff409d2c5c0c6d0a914d5"
-packs = [ "planning/human-gates" ]
+path = ".agents/rules/planning-implementation-delegation.md"
+hash = "68cf80ecacb3b65030b6b181fba4b31e19a96935d1adf663b8e100f751afb9f4"
+packs = [ "planning/implementation-delegation" ]
 
 [[file]]
-path = ".agents/rules/planning-implementation-delegation-antigravity.md"
-hash = "7ccfa8bac96e7ccc4db28e17ee809a67a4fbcaff8b247c911e8faf9bcf0d012c"
-packs = [ "planning/implementation-delegation-antigravity" ]
+path = ".agents/rules/planning-model-fallback.md"
+hash = "3b13fedc578c8200b240947507de485243ff894e98882f51a87a6836785fb62d"
+packs = [ "planning/model-fallback" ]
 
 [[file]]
-path = ".agents/rules/planning-model-fallback-antigravity.md"
-hash = "1ac9a25c1bbc351d3fec64c5b05604cc690faef2f8d702b50f475450e4e46084"
-packs = [ "planning/model-fallback-antigravity" ]
+path = ".agents/skills/ai-doc-authoring/SKILL.md"
+hash = "29b5cdfa06743452878fb8c7a68f226140dfb77fe638bcdd0bcf4a3c9a0f2469"
+packs = [ "coding/ai-first-docs" ]
 
 [[file]]
-path = ".agents/rules/security-no-hardcoded-secrets.md"
-hash = "452f9b0fb8ebaf1765015236b29ede8ae14d5e9530be51111ef8ffc6dde05c26"
-packs = [ "security/no-hardcoded-secrets" ]
-
-[[file]]
-path = ".agents/rules/security-protected-paths.md"
-hash = "6d50ed587e41f09fbebb139ccffa7d2be01a7926ecc32508f64f322aff4b2bbe"
-packs = [ "security/protected-paths" ]
-
-[[file]]
-path = ".agents/skills/contract-first-coding/SKILL.md"
-hash = "5c88a479b294f5a42d008d507e367ff502267ad23cdc6fab5e7ccd68e6ababf4"
+path = ".agents/skills/ai-doc-authoring/templates.md"
+hash = "eaa5e5cccbd99fe902f7b0e6d852ac6f64a9428f9b6c07cf2d46c6bba3151a11"
 packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".agents/skills/deliver/SKILL.md"
-hash = "699a57b7e96a9ba9cc8b88fda3b903a415765282f79804a0d745f881015a6b27"
+hash = "f59eb5b3ee7c93788ab3a32434ba90ffa91ec37d008e401893421506979bef5f"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
+path = ".agents/skills/fediim-rules/references/architecture-boundaries.md"
+hash = "1a547d01c6a7032d6ba66355f3103cfebe71530c8f575cfc8b2bf380ccec5274"
+packs = [ "coding/architecture-boundaries" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/assumptions-ledger.md"
+hash = "d5cb940f57fd0a1c2535b53f4d51335b90bee6503f54a1fe7a22b8414a532c44"
+packs = [ "planning/assumptions-ledger" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/autonomous-loop.md"
+hash = "e16631338333f6f2be5265bc6a3a6df309ae5d324519a7d6f795970260af0c65"
+packs = [ "planning/autonomous-loop" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/budgets.md"
+hash = "9a946b8851fda784b6c1fe8845ca7d75fbe0ba0210adc1ce1d24841d8a2f0439"
+packs = [ "planning/budgets" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/git-workflow.md"
+hash = "07beec3fb8ae7a2dba1fd2b012e57d0c241da46c51adb37a3f3a52ec01813eb9"
+packs = [ "planning/git-workflow" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/implementation-delegation.md"
+hash = "ea1da28bcf17aec3907da652bba2df87f4cc52defd97b7bf4a89593111732a28"
+packs = [ "planning/implementation-delegation" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/issue-structure.md"
+hash = "c411f25b74c9a8b20949bf8bd538339357f72d7cf937a61c4e25169929634b40"
+packs = [ "planning/issue-structure" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/model-fallback.md"
+hash = "a06dba0859538f2ea7f7eb717b84a16cb1ad418bc9a7b3d2f6cf1e83194a0251"
+packs = [ "planning/model-fallback" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/parallel-dispatch.md"
+hash = "2ab374dce856f569110e6bc180a1907417fc6f4f72c95bc6330dc3a2c1f6303a"
+packs = [ "planning/parallel-dispatch" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/project-docs.md"
+hash = "a72f8c03d33426d497a1c5d86a27c65e17f4d4e81295adc0bc3e332df3c479ef"
+packs = [ "coding/project-docs" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/references/review-quorum.md"
+hash = "18a24cf092e79803898be89635211238df1c1e9365adc30743fc49e910659047"
+packs = [ "planning/review-quorum" ]
+
+[[file]]
+path = ".agents/skills/fediim-rules/SKILL.md"
+hash = "40595503514c23b1df653af4d12bd605f98269c464114a0803db6d7440f0b270"
+packs = [ "coding/architecture-boundaries", "coding/project-docs", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/git-workflow", "planning/implementation-delegation", "planning/issue-structure", "planning/model-fallback", "planning/parallel-dispatch", "planning/review-quorum" ]
+
+[[file]]
 path = ".agents/skills/file-issue/SKILL.md"
-hash = "ed860d5a2957e4abc8117573f83a2d6ab40efda0ca13a7fa7984c9f2aad7e142"
+hash = "a0f037549baae3f59c6f55a8cf06adf34eda05d15a280e0c17d70afce50c4225"
 packs = [ "planning/issue-structure" ]
 
 [[file]]
 path = ".agents/skills/find-docs/SKILL.md"
-hash = "59c7c033f8f16f0f5db29c31fc3f3a84f92423f832cf356fd084f5e108d1558b"
+hash = "bc1957e48203b7b016e7655459117a6382dbba2b33e9b49fed6c26814ee9a801"
 packs = []
 
 [[file]]
@@ -265,23 +327,13 @@ hash = "be614a7115c28f9773cf97daddeea79ec47d5a70adf82b67869d91d239ee911c"
 packs = [ "planning/intake" ]
 
 [[file]]
-path = ".agents/skills/inline-ai-doc-encoder/SKILL.md"
-hash = "05ed9d40957d1086a8cea08651fc63f3af8eabc4c114ca022f791e20d2154080"
-packs = [ "coding/ai-first-docs" ]
-
-[[file]]
-path = ".agents/skills/inline-ai-doc-encoder/templates.md"
-hash = "3619fbe18cf72e9ce8add96b0d1f6314dc5b885a571b79b7551bc0a863620c2a"
-packs = [ "coding/ai-first-docs" ]
-
-[[file]]
 path = ".agents/skills/manifest-navigation/SKILL.md"
-hash = "c99ed7e098dbbd7554893175fb9c85e9ab8d23cea7000d960cb1b18ac97a4e47"
+hash = "a26b0ba7ac6c7a86ee6355e445923ace4aa6cd858251177446a1211415ca8320"
 packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".agents/skills/recall/SKILL.md"
-hash = "d5e1c6ad3161dc73c9a0e2db9c26264e8fe2a5db43add1a0aba4a1166a4bf5c2"
+hash = "e26c77a352a55de9277df3ffe654a64df05766bfd5c29176210a366fa4e3d38a"
 packs = [ "planning/learned-rules" ]
 
 [[file]]
@@ -291,17 +343,17 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/receiving-code-review/SKILL.md"
-hash = "293cbda131a50fdcee43e2d31fd39828a8284911387940e28f920ceb6151d064"
+hash = "84aed8334e75da5b67734fd1022dbbcfff076d1e9a3b252f671cd9b4711eb552"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/receiving-code-review/SOURCE.md"
-hash = "99190bda8e3a6e578f2be344c2470fe1b9c1132951b6f76e64dd1fc977a01a5c"
+hash = "7bda7edd86f2de504025f0bfb246681a653eb8fb643b91c48ded619d2f048de4"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/refactor-module/SKILL.md"
-hash = "065846a2cf4eac2b0c48d9e0cea87bb132bd0f5a2befb854229e32aa25fbad6c"
+hash = "0d1493679ea1b4277e6b929cc95fa8323dc78071873f34562e60e13c71204616"
 packs = [ "coding/architecture-boundaries" ]
 
 [[file]]
@@ -316,98 +368,8 @@ packs = [ "planning/self-eval" ]
 
 [[file]]
 path = ".agents/skills/retro/SKILL.md"
-hash = "520b562908494bad7e47036b8e8504591677488dc69224c04b6b95cc7c4756ae"
+hash = "236e3e7fb6911f1d1739483d2cde8b6aff7212882956c72b04dbd36939394f23"
 packs = [ "planning/self-eval" ]
-
-[[file]]
-path = ".agents/skills/rule-architecture-boundaries/SKILL.md"
-hash = "9c5fa9f315369e1aa9392033341dc241fa813603c94d08de44c0d52f45c55acc"
-packs = [ "coding/architecture-boundaries" ]
-
-[[file]]
-path = ".agents/skills/rule-assumptions-ledger/SKILL.md"
-hash = "8c0e518e5daf15bb33f5228e706c17a368ad982b9b693aeda9ff294334c85a88"
-packs = [ "planning/assumptions-ledger" ]
-
-[[file]]
-path = ".agents/skills/rule-autonomous-loop/SKILL.md"
-hash = "542b06ad56ec2d65fcdd81c728776e2174df147c5a6d079bd61f1ee019a83140"
-packs = [ "planning/autonomous-loop" ]
-
-[[file]]
-path = ".agents/skills/rule-budgets/SKILL.md"
-hash = "57959343da146f69dc279ebfd603dc1fa05b6071a8aa97a111462aac593c01b5"
-packs = [ "planning/budgets" ]
-
-[[file]]
-path = ".agents/skills/rule-constraints-register/SKILL.md"
-hash = "35ea83c638333c016e7345da2e32a0e37b79657ee6835bd1e3039e42c699b829"
-packs = [ "planning/constraints-register" ]
-
-[[file]]
-path = ".agents/skills/rule-git-workflow/SKILL.md"
-hash = "e17bfcb150668baa800b2e568fb4e6f0ddd1118b02647f51a397002ba1f66316"
-packs = [ "planning/git-workflow" ]
-
-[[file]]
-path = ".agents/skills/rule-implementation-delegation-antigravity/SKILL.md"
-hash = "517bf8c687490b7a237e4f9d814c832854faa88a273cf3c47445b7e63eef70eb"
-packs = [ "planning/implementation-delegation-antigravity" ]
-
-[[file]]
-path = ".agents/skills/rule-inbox-digest/SKILL.md"
-hash = "62d46f712e32bcc76061396eba226fc4bff07723110bfe726210304658920c8f"
-packs = [ "planning/inbox-digest" ]
-
-[[file]]
-path = ".agents/skills/rule-issue-structure/SKILL.md"
-hash = "06b27576012a5429919ed3251e058bb9c8a28cacf9b63832f42863cf8a9623ad"
-packs = [ "planning/issue-structure" ]
-
-[[file]]
-path = ".agents/skills/rule-model-fallback-antigravity/SKILL.md"
-hash = "6330d81a009bc4193c4893f2d3d014a8db7968016f89824a92979b3f12218c32"
-packs = [ "planning/model-fallback-antigravity" ]
-
-[[file]]
-path = ".agents/skills/rule-output-discipline/SKILL.md"
-hash = "bea8bc4eb8fb2de20b4b1fca71766f50a0fb16c6f25e9953c9015011adae5920"
-packs = [ "coding/output-discipline" ]
-
-[[file]]
-path = ".agents/skills/rule-parallel-dispatch/SKILL.md"
-hash = "6b17c3396e0cf3ab5fb2d833318daa5116fc2dc2cdc1e494e65ac08fd6c740bb"
-packs = [ "planning/parallel-dispatch" ]
-
-[[file]]
-path = ".agents/skills/rule-plan-breadth/SKILL.md"
-hash = "c6aad80b14484de8c2af853c3f4d4adab4a850aa08e100f0b1640b2b6fc2526e"
-packs = [ "planning/plan-breadth" ]
-
-[[file]]
-path = ".agents/skills/rule-project-docs/SKILL.md"
-hash = "e3d620262a4b2e9aa24d5a84938bea092df82441b5674b4dcd790f0e99b70935"
-packs = [ "coding/project-docs" ]
-
-[[file]]
-path = ".agents/skills/rule-protected-paths/SKILL.md"
-hash = "24ab1ab6dffac0c6cfcab99b56b2b2344ab6e85b69484cb51266f24321d45769"
-packs = [ "security/protected-paths" ]
-
-[[file]]
-path = ".agents/skills/rule-review-quorum/SKILL.md"
-hash = "6b5d3d52fa3c527c22b4d0c03c31972546d13eea8dcec91573424974026bb6d0"
-packs = [ "planning/review-quorum" ]
-
-[[file]]
-path = ".agents/skills/rule-spec-lock/SKILL.md"
-hash = "fc8ab053ccc2106af2062cc2e37df0128c040c0385208b102f1361c571ba00fd"
-packs = [ "planning/spec-lock" ]
-
-[[file]]
-path = ".agents/skills/setup-ai-docs/SKILL.md"
-hash = "aa55d05b68f749cb33f9b44aeabcdadbb8bd7d75ee72e83e838702a6a8ab0043"
-packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".agents/skills/systematic-debugging/condition-based-waiting-example.ts"
@@ -416,12 +378,12 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/systematic-debugging/condition-based-waiting.md"
-hash = "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26"
+hash = "355e858af2c8700fa32a8a0ffafcbf9c4ea03859db99318bd10b78309e83f89e"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/systematic-debugging/defense-in-depth.md"
-hash = "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7"
+hash = "509195bfe34792516d7e29527937460c0479115b4577af977c0ce00e5eaf74eb"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
@@ -436,17 +398,17 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/systematic-debugging/root-cause-tracing.md"
-hash = "75b933b6a8c40bdb2031b10f21654395b56ec6ab6bc7b018c18d3fe57aeb7fb8"
+hash = "8980ee31735478cee06c5c3a51bf08935abe7b39a45813353d6f0843e545b398"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/systematic-debugging/SKILL.md"
-hash = "73f57b8e87e5346651f24ff41c7c253558cb085a29424533761947b31b5d36eb"
+hash = "9af5cf156fef526e35a535a55c706f6e3f98119f616d05b85dd6bfeb38b9d9f4"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/systematic-debugging/SOURCE.md"
-hash = "8f36fb37d3bb66d4035b121751fe35e67390550ac2295ee282603fa372a4251c"
+hash = "19aaee43d90623d3ac6c7295c829cd64bd9db220d50bbb81caa8a35e812ccbe4"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
@@ -456,102 +418,187 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/verification-before-completion/SKILL.md"
-hash = "76c2245c677ce73fa1038e2820e0407d968d75f3bf2477bbc6fd95703e851a01"
+hash = "93bba2f4e76ef1d37ef57c7b7e0d455b72ede3de001b043ef94d37eabe8cc753"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".agents/skills/verification-before-completion/SOURCE.md"
-hash = "20aba4466d1f7a5a71cd6ac05a116f385dce790a2d2e401dc85506fbf87cc84e"
+hash = "bc10ed7b5944024fb4db45f62dce21950b425336dca29eeec1d44696b0d014db"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/agents/implementer.md"
-hash = "0da89f6a70993ba8079584446dae2256458e4299fa671eeb2d4e8f03786541ac"
+hash = "cb68fc6dc4132b746568ddc6916f96edd0b144076d1288e2e634d11409c7456c"
 packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".claude/agents/plan-reviewer.md"
-hash = "3806e85ad3fd9db2d79e72993c3d1a3e47fbb23a34525b0082f4c06daba91a7c"
+hash = "9eccbf4f811512150ed5d1a07f4f33abd29e8683cae938d89e4301c714965dc5"
 packs = [ "personas/plan-reviewer" ]
 
 [[file]]
 path = ".claude/agents/planner.md"
-hash = "3eb16c25a20b8aaf655894ca48eb5d91d479b8a3f1e7d05d243f685ed4a816c1"
+hash = "6529e8ed7f10d6cd6954fdc6146487523b17d4e044c761c624297447345e0c0a"
 packs = [ "personas/planner" ]
 
 [[file]]
 path = ".claude/agents/pr-reviewer.md"
-hash = "9f63cb9759d04bba3766dddfdf550435e794e4aca49e18680cfb9a8b907d143b"
+hash = "f61182ef948e31a45fbf3cd52b219a4bfd69068afe908869583268343d5daccf"
 packs = [ "personas/pr-reviewer" ]
 
 [[file]]
 path = ".claude/agents/security-reviewer.md"
-hash = "dd830fbfbb488bf216de63d3abb42cc7d276fee2fed8abc4024d0eb940b49a0f"
+hash = "c989948e4ed91218de7f821222d6675dac796de91ec11338e8ce531a0beffbf2"
 packs = [ "personas/security-reviewer" ]
 
 [[file]]
-path = ".claude/hooks/block-destructive.cjs"
-hash = "e6c7ac73a749c1fc2e30bd1a325744bc49c0ace6b2ccf5373dd53ce05d017371"
+path = ".claude/hooks/compact-rehydrate.cjs"
+hash = "b93a3b684929308c685b8f64c33ddc337d56d423144a1f3fcdac42a618eacdeb"
 packs = []
 
 [[file]]
-path = ".claude/hooks/block-gradle-chain.cjs"
-hash = "bb9c9b0285b8babf6315553821bb025a615c3f040586195aaf5bcb7c80912a3b"
+path = ".claude/hooks/pre-bash.cjs"
+hash = "543ca389bd96b26489834adc62a08aa827293e482d97cfb9ecd6e89bf710fb5d"
 packs = []
 
 [[file]]
-path = ".claude/hooks/block-secrets.cjs"
-hash = "4e1ff3e7b204bdec5d74d94365d628c56a716f89516f49f562e26d81f956199f"
-packs = [ "security/no-hardcoded-secrets" ]
+path = ".claude/hooks/pre-read.cjs"
+hash = "e88ed32288b81cd97c78a47d27c5a77c6da964f033cb8b5471f7aa5e3a84f793"
+packs = []
 
 [[file]]
-path = ".claude/hooks/format-and-scan.cjs"
-hash = "cdc29f5cfab6f311a653d8e3e003b9fa5c9388e625be57539dae861a32a65cb4"
-packs = [ "security/no-hardcoded-secrets" ]
-
-[[file]]
-path = ".claude/hooks/protect-paths.cjs"
-hash = "eb0ecb52aa6e039dbfb1c97fe9006e3d99d266c81c7488a4f143a0e47b8276db"
-packs = [ "security/protected-paths" ]
+path = ".claude/hooks/pre-write.cjs"
+hash = "69c15b307bf45806ced6cd98ad130395654e40d68b25644aea6cc171dddd0e1e"
+packs = [ "security/no-hardcoded-secrets", "security/protected-paths" ]
 
 [[file]]
 path = ".claude/hooks/tdd-stop.cjs"
-hash = "2360fbed1ee97688467d56e61560eb0e55c5ac39f840bc51825f35a7de1549d9"
+hash = "4c2ef737010c2fed3c61c4e8baab47f4352d4749fb830a237709f3f05653e31b"
 packs = [ "coding/tdd-gate" ]
 
 [[file]]
+path = ".claude/rules/fediim-lessons/grep-source-for-bumped-version.md"
+hash = "05d0f67ff27c8c8398ffb96bbd1bf3472baa0acc67777be725ff9b93e583587a"
+packs = []
+
+[[file]]
+path = ".claude/rules/fediim-lessons/implementer-uses-plan-s-paths.md"
+hash = "11fb54caf96f694c01c7c9f8ce1dbd06a9bb2d8eae742b252a8ba9ec47ef45ae"
+packs = []
+
+[[file]]
+path = ".claude/rules/fediim-lessons/name-the-ui-test-seam.md"
+hash = "49c11a6b83f941397730eed6b7d7f091e44ab483434f4330b1517591312e54d1"
+packs = []
+
+[[file]]
+path = ".claude/rules/fediim-lessons/resolve-new-artifacts-before-approval.md"
+hash = "8c9f50e1416b96556edc1a4f20ea23154944791da49b58d89cf2f1b20ca03792"
+packs = []
+
+[[file]]
+path = ".claude/rules/fediim-lessons/verify-already-done-against-defaults.md"
+hash = "4a02af61c900c64f59a7ab124dd9706f30574e11b62931027f16c85d9e257bac"
+packs = []
+
+[[file]]
 path = ".claude/rules/planning-implementation-delegation.md"
-hash = "561b9d523159768c4dfffd437b200b7a070218f5f5153bdf9be409b73e010cf7"
+hash = "9ad562856dbd3958a6d659fa2e4ea7f189853275caec4fc0e1a2a8ac065630ee"
 packs = [ "planning/implementation-delegation" ]
 
 [[file]]
 path = ".claude/rules/planning-model-fallback.md"
-hash = "7302bc32a470aacbd553f1b7aed67495147fd67e6ea1f65d2146b4feb3219794"
+hash = "caf7ca1ccfab37eeb64c3f9fc2e808f6df02c6ee4937cc70bd3366e883ec8b8c"
 packs = [ "planning/model-fallback" ]
 
 [[file]]
 path = ".claude/settings.json"
-hash = "eb1d0fe9c00d3c630191ac0382e90c74c862fa7912f8ef4363fe0c1378587d3a"
+hash = "92380d2847df22186fb4e781cca1c2356e1aa969487d4fe1bc67d3152d3589ba"
 packs = []
 
 [[file]]
-path = ".claude/skills/contract-first-coding/SKILL.md"
-hash = "5c88a479b294f5a42d008d507e367ff502267ad23cdc6fab5e7ccd68e6ababf4"
+path = ".claude/skills/ai-doc-authoring/SKILL.md"
+hash = "29b5cdfa06743452878fb8c7a68f226140dfb77fe638bcdd0bcf4a3c9a0f2469"
+packs = [ "coding/ai-first-docs" ]
+
+[[file]]
+path = ".claude/skills/ai-doc-authoring/templates.md"
+hash = "eaa5e5cccbd99fe902f7b0e6d852ac6f64a9428f9b6c07cf2d46c6bba3151a11"
 packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".claude/skills/deliver/SKILL.md"
-hash = "1ffd860ef8102e0a576cef535d836ec9f3ebec21cce3b867903c63edbb102d17"
+hash = "06516b94a3feb97b18d5f0f15c48d2ebd9f37d1c29803a81d8dc42adf4cfe2a9"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
+path = ".claude/skills/fediim-rules/references/architecture-boundaries.md"
+hash = "1a547d01c6a7032d6ba66355f3103cfebe71530c8f575cfc8b2bf380ccec5274"
+packs = [ "coding/architecture-boundaries" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/assumptions-ledger.md"
+hash = "d5cb940f57fd0a1c2535b53f4d51335b90bee6503f54a1fe7a22b8414a532c44"
+packs = [ "planning/assumptions-ledger" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/autonomous-loop.md"
+hash = "e16631338333f6f2be5265bc6a3a6df309ae5d324519a7d6f795970260af0c65"
+packs = [ "planning/autonomous-loop" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/budgets.md"
+hash = "9a946b8851fda784b6c1fe8845ca7d75fbe0ba0210adc1ce1d24841d8a2f0439"
+packs = [ "planning/budgets" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/git-workflow.md"
+hash = "07beec3fb8ae7a2dba1fd2b012e57d0c241da46c51adb37a3f3a52ec01813eb9"
+packs = [ "planning/git-workflow" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/implementation-delegation.md"
+hash = "524e6befc1b60b0bd21ab582b5b753f1d7553621e9f3126331a4454470e8a88e"
+packs = [ "planning/implementation-delegation" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/issue-structure.md"
+hash = "c411f25b74c9a8b20949bf8bd538339357f72d7cf937a61c4e25169929634b40"
+packs = [ "planning/issue-structure" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/model-fallback.md"
+hash = "3178c724f67e7c0c0238d4260a379db1958d025a75529f64e100f433b7519aa6"
+packs = [ "planning/model-fallback" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/parallel-dispatch.md"
+hash = "2ab374dce856f569110e6bc180a1907417fc6f4f72c95bc6330dc3a2c1f6303a"
+packs = [ "planning/parallel-dispatch" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/project-docs.md"
+hash = "a72f8c03d33426d497a1c5d86a27c65e17f4d4e81295adc0bc3e332df3c479ef"
+packs = [ "coding/project-docs" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/references/review-quorum.md"
+hash = "18a24cf092e79803898be89635211238df1c1e9365adc30743fc49e910659047"
+packs = [ "planning/review-quorum" ]
+
+[[file]]
+path = ".claude/skills/fediim-rules/SKILL.md"
+hash = "40595503514c23b1df653af4d12bd605f98269c464114a0803db6d7440f0b270"
+packs = [ "coding/architecture-boundaries", "coding/project-docs", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/git-workflow", "planning/implementation-delegation", "planning/issue-structure", "planning/model-fallback", "planning/parallel-dispatch", "planning/review-quorum" ]
+
+[[file]]
 path = ".claude/skills/file-issue/SKILL.md"
-hash = "ed860d5a2957e4abc8117573f83a2d6ab40efda0ca13a7fa7984c9f2aad7e142"
+hash = "a0f037549baae3f59c6f55a8cf06adf34eda05d15a280e0c17d70afce50c4225"
 packs = [ "planning/issue-structure" ]
 
 [[file]]
 path = ".claude/skills/find-docs/SKILL.md"
-hash = "59c7c033f8f16f0f5db29c31fc3f3a84f92423f832cf356fd084f5e108d1558b"
+hash = "bc1957e48203b7b016e7655459117a6382dbba2b33e9b49fed6c26814ee9a801"
 packs = []
 
 [[file]]
@@ -560,23 +607,13 @@ hash = "be614a7115c28f9773cf97daddeea79ec47d5a70adf82b67869d91d239ee911c"
 packs = [ "planning/intake" ]
 
 [[file]]
-path = ".claude/skills/inline-ai-doc-encoder/SKILL.md"
-hash = "05ed9d40957d1086a8cea08651fc63f3af8eabc4c114ca022f791e20d2154080"
-packs = [ "coding/ai-first-docs" ]
-
-[[file]]
-path = ".claude/skills/inline-ai-doc-encoder/templates.md"
-hash = "3619fbe18cf72e9ce8add96b0d1f6314dc5b885a571b79b7551bc0a863620c2a"
-packs = [ "coding/ai-first-docs" ]
-
-[[file]]
 path = ".claude/skills/manifest-navigation/SKILL.md"
-hash = "c99ed7e098dbbd7554893175fb9c85e9ab8d23cea7000d960cb1b18ac97a4e47"
+hash = "a26b0ba7ac6c7a86ee6355e445923ace4aa6cd858251177446a1211415ca8320"
 packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".claude/skills/recall/SKILL.md"
-hash = "d5e1c6ad3161dc73c9a0e2db9c26264e8fe2a5db43add1a0aba4a1166a4bf5c2"
+hash = "e26c77a352a55de9277df3ffe654a64df05766bfd5c29176210a366fa4e3d38a"
 packs = [ "planning/learned-rules" ]
 
 [[file]]
@@ -586,17 +623,17 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/receiving-code-review/SKILL.md"
-hash = "293cbda131a50fdcee43e2d31fd39828a8284911387940e28f920ceb6151d064"
+hash = "84aed8334e75da5b67734fd1022dbbcfff076d1e9a3b252f671cd9b4711eb552"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/receiving-code-review/SOURCE.md"
-hash = "99190bda8e3a6e578f2be344c2470fe1b9c1132951b6f76e64dd1fc977a01a5c"
+hash = "7bda7edd86f2de504025f0bfb246681a653eb8fb643b91c48ded619d2f048de4"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/refactor-module/SKILL.md"
-hash = "065846a2cf4eac2b0c48d9e0cea87bb132bd0f5a2befb854229e32aa25fbad6c"
+hash = "0d1493679ea1b4277e6b929cc95fa8323dc78071873f34562e60e13c71204616"
 packs = [ "coding/architecture-boundaries" ]
 
 [[file]]
@@ -611,98 +648,8 @@ packs = [ "planning/self-eval" ]
 
 [[file]]
 path = ".claude/skills/retro/SKILL.md"
-hash = "520b562908494bad7e47036b8e8504591677488dc69224c04b6b95cc7c4756ae"
+hash = "236e3e7fb6911f1d1739483d2cde8b6aff7212882956c72b04dbd36939394f23"
 packs = [ "planning/self-eval" ]
-
-[[file]]
-path = ".claude/skills/rule-architecture-boundaries/SKILL.md"
-hash = "9c5fa9f315369e1aa9392033341dc241fa813603c94d08de44c0d52f45c55acc"
-packs = [ "coding/architecture-boundaries" ]
-
-[[file]]
-path = ".claude/skills/rule-assumptions-ledger/SKILL.md"
-hash = "8c0e518e5daf15bb33f5228e706c17a368ad982b9b693aeda9ff294334c85a88"
-packs = [ "planning/assumptions-ledger" ]
-
-[[file]]
-path = ".claude/skills/rule-autonomous-loop/SKILL.md"
-hash = "542b06ad56ec2d65fcdd81c728776e2174df147c5a6d079bd61f1ee019a83140"
-packs = [ "planning/autonomous-loop" ]
-
-[[file]]
-path = ".claude/skills/rule-budgets/SKILL.md"
-hash = "57959343da146f69dc279ebfd603dc1fa05b6071a8aa97a111462aac593c01b5"
-packs = [ "planning/budgets" ]
-
-[[file]]
-path = ".claude/skills/rule-constraints-register/SKILL.md"
-hash = "35ea83c638333c016e7345da2e32a0e37b79657ee6835bd1e3039e42c699b829"
-packs = [ "planning/constraints-register" ]
-
-[[file]]
-path = ".claude/skills/rule-git-workflow/SKILL.md"
-hash = "e17bfcb150668baa800b2e568fb4e6f0ddd1118b02647f51a397002ba1f66316"
-packs = [ "planning/git-workflow" ]
-
-[[file]]
-path = ".claude/skills/rule-implementation-delegation/SKILL.md"
-hash = "42aa85fcf1126fcc746e410d85a8f9f4ce16b36b689f848bfefe90c125de2015"
-packs = [ "planning/implementation-delegation" ]
-
-[[file]]
-path = ".claude/skills/rule-inbox-digest/SKILL.md"
-hash = "62d46f712e32bcc76061396eba226fc4bff07723110bfe726210304658920c8f"
-packs = [ "planning/inbox-digest" ]
-
-[[file]]
-path = ".claude/skills/rule-issue-structure/SKILL.md"
-hash = "06b27576012a5429919ed3251e058bb9c8a28cacf9b63832f42863cf8a9623ad"
-packs = [ "planning/issue-structure" ]
-
-[[file]]
-path = ".claude/skills/rule-model-fallback/SKILL.md"
-hash = "cd8365f6e58b53ed7b267307bb30349ac6c8b3f93858b220db8f0014c37e09cc"
-packs = [ "planning/model-fallback" ]
-
-[[file]]
-path = ".claude/skills/rule-output-discipline/SKILL.md"
-hash = "bea8bc4eb8fb2de20b4b1fca71766f50a0fb16c6f25e9953c9015011adae5920"
-packs = [ "coding/output-discipline" ]
-
-[[file]]
-path = ".claude/skills/rule-parallel-dispatch/SKILL.md"
-hash = "6b17c3396e0cf3ab5fb2d833318daa5116fc2dc2cdc1e494e65ac08fd6c740bb"
-packs = [ "planning/parallel-dispatch" ]
-
-[[file]]
-path = ".claude/skills/rule-plan-breadth/SKILL.md"
-hash = "c6aad80b14484de8c2af853c3f4d4adab4a850aa08e100f0b1640b2b6fc2526e"
-packs = [ "planning/plan-breadth" ]
-
-[[file]]
-path = ".claude/skills/rule-project-docs/SKILL.md"
-hash = "e3d620262a4b2e9aa24d5a84938bea092df82441b5674b4dcd790f0e99b70935"
-packs = [ "coding/project-docs" ]
-
-[[file]]
-path = ".claude/skills/rule-protected-paths/SKILL.md"
-hash = "24ab1ab6dffac0c6cfcab99b56b2b2344ab6e85b69484cb51266f24321d45769"
-packs = [ "security/protected-paths" ]
-
-[[file]]
-path = ".claude/skills/rule-review-quorum/SKILL.md"
-hash = "6b5d3d52fa3c527c22b4d0c03c31972546d13eea8dcec91573424974026bb6d0"
-packs = [ "planning/review-quorum" ]
-
-[[file]]
-path = ".claude/skills/rule-spec-lock/SKILL.md"
-hash = "fc8ab053ccc2106af2062cc2e37df0128c040c0385208b102f1361c571ba00fd"
-packs = [ "planning/spec-lock" ]
-
-[[file]]
-path = ".claude/skills/setup-ai-docs/SKILL.md"
-hash = "aa55d05b68f749cb33f9b44aeabcdadbb8bd7d75ee72e83e838702a6a8ab0043"
-packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".claude/skills/systematic-debugging/condition-based-waiting-example.ts"
@@ -711,12 +658,12 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/systematic-debugging/condition-based-waiting.md"
-hash = "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26"
+hash = "355e858af2c8700fa32a8a0ffafcbf9c4ea03859db99318bd10b78309e83f89e"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/systematic-debugging/defense-in-depth.md"
-hash = "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7"
+hash = "509195bfe34792516d7e29527937460c0479115b4577af977c0ce00e5eaf74eb"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
@@ -731,17 +678,17 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/systematic-debugging/root-cause-tracing.md"
-hash = "75b933b6a8c40bdb2031b10f21654395b56ec6ab6bc7b018c18d3fe57aeb7fb8"
+hash = "8980ee31735478cee06c5c3a51bf08935abe7b39a45813353d6f0843e545b398"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/systematic-debugging/SKILL.md"
-hash = "73f57b8e87e5346651f24ff41c7c253558cb085a29424533761947b31b5d36eb"
+hash = "9af5cf156fef526e35a535a55c706f6e3f98119f616d05b85dd6bfeb38b9d9f4"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/systematic-debugging/SOURCE.md"
-hash = "8f36fb37d3bb66d4035b121751fe35e67390550ac2295ee282603fa372a4251c"
+hash = "19aaee43d90623d3ac6c7295c829cd64bd9db220d50bbb81caa8a35e812ccbe4"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
@@ -751,17 +698,17 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/verification-before-completion/SKILL.md"
-hash = "76c2245c677ce73fa1038e2820e0407d968d75f3bf2477bbc6fd95703e851a01"
+hash = "93bba2f4e76ef1d37ef57c7b7e0d455b72ede3de001b043ef94d37eabe8cc753"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".claude/skills/verification-before-completion/SOURCE.md"
-hash = "20aba4466d1f7a5a71cd6ac05a116f385dce790a2d2e401dc85506fbf87cc84e"
+hash = "bc10ed7b5944024fb4db45f62dce21950b425336dca29eeec1d44696b0d014db"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".fediim/antigravity-permissions.json"
-hash = "5d84bb6ded2037d005dacadcc9fe1a0bde19f5ecc10b9e8b3206ab786e1f7ce1"
+hash = "57290b2a7d391ea9a0d1fc6272a806fc598ef3a1332178d7bac237448449b041"
 packs = []
 
 [[file]]
@@ -771,12 +718,12 @@ packs = [ "planning/budgets" ]
 
 [[file]]
 path = ".fediim/ci/guards.mjs"
-hash = "d6bbb2fc029aadcfc38089051a62bb9fc68db10ad5ef1a0918e921487230841a"
+hash = "3d50939028749ccc1e29408f88035cf393509b98012a2d3ce6e3ba7313eb662c"
 packs = [ "security/no-hardcoded-secrets", "security/protected-paths" ]
 
 [[file]]
 path = ".fediim/ci/issue-audit.mjs"
-hash = "bef956612f965deed9bc3b972e1694f6d7c14a3efa0cda01b28f99309590a720"
+hash = "a40e8cab2c4680c32811910ab9c180636ec3b1ae169d6ef25ee726df3b7f494d"
 packs = [ "planning/issue-structure" ]
 
 [[file]]
@@ -786,7 +733,7 @@ packs = []
 
 [[file]]
 path = ".fediim/otel-attributes"
-hash = "9182f131daa71a8dd98029bcdb06ec2a3bcb22f5bfa66af2b17320e784bd64ec"
+hash = "3cd260bd564c24e7e756b4b5882d60d2796f161cba0904aae70b0b8575a31605"
 packs = []
 
 [[file]]
@@ -795,38 +742,78 @@ hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 packs = []
 
 [[file]]
+path = ".fediim/tools/affected-tests.mjs"
+hash = "a59a69b84832329c3092a64a2eee5353983acb048b4b3b3c282174a49c2147a2"
+packs = []
+
+[[file]]
+path = ".fediim/tools/brief.mjs"
+hash = "5d54a24ed97537cd2535aa765505d525c126cc68464e736a5a31a10837cffe10"
+packs = [ "personas/implementer" ]
+
+[[file]]
 path = ".fediim/tools/dispatch-check.mjs"
 hash = "c78875074029d77f1040c76d3d084f2297fbb4f830966f46ef21e332b8b74a13"
 packs = [ "planning/parallel-dispatch" ]
 
 [[file]]
+path = ".fediim/tools/guard-mutation.mjs"
+hash = "d38189b090f79f9b4284e207828ada5d95c3f77f647b4fd6ef4cf61d32f48157"
+packs = [ "planning/verification-gates" ]
+
+[[file]]
+path = ".fediim/tools/outline.mjs"
+hash = "d2e19ce579ea9902d5859d0d9702442d637079002c6884e781d366c8ac85d9b2"
+packs = []
+
+[[file]]
+path = ".fediim/tools/pr-prep.mjs"
+hash = "d3581195142b6d7cc7b2abb2a4c272b41d75bfbf440c2df17d5339b35ed6d4a4"
+packs = []
+
+[[file]]
 path = ".fediim/tools/recall.mjs"
-hash = "b0a7287a7afc3476c080aa7f187cf899748139d1ddbc21b2c503c21abaed74e0"
+hash = "a48605bcf5efe0b72087891a9168ac6f677efb3261952575b67b52736f6a2fd7"
 packs = [ "planning/learned-rules" ]
 
 [[file]]
+path = ".fediim/tools/review-package.mjs"
+hash = "250c663d23fafaf585aaf490cc4cf7ce3969e222b4c264e244926226ab9634b5"
+packs = [ "personas/implementer" ]
+
+[[file]]
+path = ".fediim/tools/telemetry.mjs"
+hash = "595fb0c80241334672959e3d0e3f11aed34708a8e3c5363c6a02d08b43460dc9"
+packs = []
+
+[[file]]
+path = ".fediim/tools/triage-task.mjs"
+hash = "25ba910fdad3be209a55964d790ec318d18ced9ab8ccd0510485bd432f17e1ab"
+packs = [ "planning/deliver-loop" ]
+
+[[file]]
 path = ".github/ISSUE_TEMPLATE/task.md"
-hash = "97fb0fbf802b844d017d6e53c95ddb5f8623dc71d56bf6ab4e0207d0447729ce"
+hash = "d8aaedc26e3d9ac0683129c503cb06cecf46c59249cb6195e5d036c595fedef1"
 packs = [ "planning/issue-structure" ]
 
 [[file]]
 path = ".github/workflows/fediim-budgets.yml"
-hash = "8991881379a093a1038188bb66dcafe2cb13dbe7463a5251f4482b814d5dd5ea"
+hash = "ff321558c6d10722a4aa1e3c127a2d321ecb48e141f7c16ca8183d34c743dcd6"
 packs = [ "planning/budgets" ]
 
 [[file]]
 path = ".github/workflows/fediim-guards.yml"
-hash = "4cd0e32b39e943521eec0af1a09ef277f3cc772998fefc68b4fbf86cb54e29ad"
+hash = "d52434c33bd13486bac7b6c0a8035d36e85724cc51c70ece581e8b7a5d1d7f02"
 packs = [ "security/no-hardcoded-secrets", "security/protected-paths" ]
 
 [[file]]
 path = ".github/workflows/fediim-issue-audit.yml"
-hash = "adac2930d4daad110c5c5ea3a95fe76ca935e93a2673784e5cadf7fab4c4db67"
+hash = "1fe1c85415496c7ab0e65f1ec5f13a0dfa2f2a77b44e2cf173114d6f03b4e467"
 packs = [ "planning/issue-structure" ]
 
 [[file]]
 path = "AGENTS.md"
-hash = "8ec6b6afc18501f36706fdaa0b43979287de3c05c2d9ae9ff871b75362f4136b"
+hash = "2b3690edddf4e8edc94ffcb95f57c9ec38c93b87996e067ef8133b4d12b6c512"
 packs = [ "coding/ai-first-docs", "coding/architecture-boundaries", "coding/base", "coding/debugging-discipline", "coding/no-guessed-apis", "coding/output-discipline", "coding/project-docs", "coding/tdd-gate", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/constraints-register", "planning/deliver-loop", "planning/git-workflow", "planning/human-gates", "planning/inbox-digest", "planning/intake", "planning/issue-structure", "planning/learned-rules", "planning/parallel-dispatch", "planning/plan-breadth", "planning/review-quorum", "planning/self-eval", "planning/spec-lock", "planning/verification-gates", "security/no-hardcoded-secrets", "security/protected-paths", "security/untrusted-task-inputs" ]
 
 [[file]]
@@ -836,10 +823,10 @@ packs = []
 
 [[file]]
 path = "fediim.toml"
-hash = "202479dd154c6ed413193ed51a214261182cdb93bb351e25433eabfb7a9751da"
+hash = "eb3a2dea32097e4f4f66f20f03ce30234054217fa3e7e0dc71924be4dc3fce59"
 packs = []
 
 [[file]]
 path = "GEMINI.md"
-hash = "9207086bb4ed761f115d6e60fe7e7d5578f3c3e28bcae2325f12e85d0f6e280f"
+hash = "395d3644c0d7ad08155a16fa7c9bd84ecc8c3f69f2506b5cf7ee1f40823b3658"
 packs = []

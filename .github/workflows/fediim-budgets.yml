@@ -1,21 +1,32 @@
 # <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
+# Manual (Actions minutes): gh workflow run fediim-budgets.yml -f number=<n> -f kind=pr|plan
 name: fediim-budgets
 on:
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Issue or PR number
+        required: true
+        type: number
+      kind:
+        description: Review kind
+        required: true
+        type: choice
+        options: [pr, plan]
 permissions:
   issues: write
   pull-requests: write
   contents: read
 jobs:
   budget:
-    if: startsWith(github.event.comment.body, 'VERDICT:')
+    # Dispatch only from main, so the write token runs main's audit script.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      NUM: ${{ github.event.issue.number }}
-      KIND: ${{ github.event.issue.pull_request && 'pr' || 'plan' }}
+      NUM: ${{ inputs.number }}
+      KIND: ${{ inputs.kind }}
       MARKER: "<!-- fediim:budget -->"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

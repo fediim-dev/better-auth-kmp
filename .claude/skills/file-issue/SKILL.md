@@ -36,8 +36,16 @@ through the phases in order; the full rulebook in `AGENTS.md` still applies.
 7. **Session Profile** — run `fediim session catalog`, then write a
    `## Session Profile` section with a ```toml fenced block. Prefer
    `profile = "<name>"` when a saved profile fits; otherwise list only the
-   needed `skills`, `integrations`, `packs`, plus `model`, `effort` and a
-   one-line `brief` that does not start with `-`.
+   needed `skills`, `integrations`, `packs`, plus the most suitable current
+   `model` and `effort` (`claude-opus-5-5` with `effort = "high"` for complex
+   architecture, cross-module design, or security-critical work;
+   `claude-sonnet-5-5` with `effort = "medium"`/`"high"` for standard
+   implementation, debugging, and refactoring; `claude-haiku-5-5` with
+   `effort = "low"` for mechanical, single-file, or docs-only edits; on
+   Antigravity: `gemini-4-carbon` for complex work, `gemini-4-hydrogen` for
+   standard work, `gemini-3.8-flash` for mechanical edits; the launcher adds
+   the effort — never retired IDs such as `claude-opus-4-6`,
+   `claude-sonnet-4-5`, `gemini-2.5-pro` or bare `pro`) and a one-line `brief` that does not start with `-`.
 
 ## Phase 2 — Compose the body
 
@@ -58,14 +66,14 @@ defines one (e.g. `T07: <summary>`).
 ## Phase 3 — File it
 
 1. Ensure the labels exist (idempotent, safe to repeat):
-   `gh label create "priority:P2" --force` — likewise for the chosen tier,
+   `gh label create "priority:<PX>" --force` for the chosen priority,
    and `wave:backlog` when filing a mid-task follow-up.
 2. Create the issue:
    `gh issue create --title "<title>" --body "<body>" --label "priority:PX"`
    — add `--label "wave:backlog"` for follow-ups discovered mid-task.
 3. NEVER self-apply `ready` or `approved-to-start`, and never remove
    `needs-human-approval` — those labels are human-only (git-workflow
-   rule); the issue enters the queue when a human marks it `ready`.
+   rule); no `ready` label is needed for the issue to enter the queue.
 
 ## Phase 4 — Verify (the issue is not filed until this passes)
 
