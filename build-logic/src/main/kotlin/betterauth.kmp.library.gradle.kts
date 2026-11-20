@@ -1,4 +1,5 @@
 // Shared setup for every better-auth-* module: targets, Android library config, ktfmt, publishing.
+import org.gradle.authentication.http.BasicAuthentication
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
@@ -80,6 +81,40 @@ publishing {
                 .orElse(providers.environmentVariable("GITHUB_TOKEN"))
                 .orNull
       }
+    }
+    val reposiliteBaseUrl =
+        providers
+            .gradleProperty("reposilite.url")
+            .orElse(providers.environmentVariable("REPOSILITE_URL"))
+            .getOrElse("http://ntcserver-macmini:8083")
+            .trimEnd('/')
+    val publishVersion =
+        providers.gradleProperty("version").orElse(provider { version.toString() }).get()
+    val reposiliteTargetUrl =
+        if (publishVersion.endsWith("-SNAPSHOT")) {
+          "$reposiliteBaseUrl/snapshots"
+        } else {
+          "$reposiliteBaseUrl/releases"
+        }
+    maven {
+      name = "Reposilite"
+      url = uri(reposiliteTargetUrl)
+      isAllowInsecureProtocol = reposiliteTargetUrl.startsWith("http://")
+      credentials {
+        username =
+            providers
+                .gradleProperty("reposilite.user")
+                .orElse(providers.gradleProperty("ReposiliteUsername"))
+                .orElse(providers.environmentVariable("REPOSILITE_USERNAME"))
+                .orNull
+        password =
+            providers
+                .gradleProperty("reposilite.token")
+                .orElse(providers.gradleProperty("ReposilitePassword"))
+                .orElse(providers.environmentVariable("REPOSILITE_TOKEN"))
+                .orNull
+      }
+      authentication { create<BasicAuthentication>("basic") }
     }
   }
 }

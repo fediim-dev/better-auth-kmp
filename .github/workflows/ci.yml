@@ -55,3 +55,14 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to Reposilite (optional)
+        env:
+          REPOSILITE_URL: ${{ vars.REPOSILITE_URL || secrets.REPOSILITE_URL }}
+          REPOSILITE_USERNAME: ${{ secrets.REPOSILITE_USERNAME }}
+          REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
+        run: |
+          if [[ -n "${REPOSILITE_URL:-}" && -n "${REPOSILITE_USERNAME:-}" && -n "${REPOSILITE_TOKEN:-}" ]]; then
+            ./gradlew publishAllPublicationsToReposiliteRepository
+          else
+            echo "Skipping Reposilite publish: REPOSILITE_URL or credentials not configured"
+          fi
