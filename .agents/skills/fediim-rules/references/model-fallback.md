@@ -15,7 +15,9 @@ stopping: `pro` for planning personas, `flash` for all others. Say so.
    - Subagent / bridge persona: dispatch the same brief via `invoke_subagent`
      (TypeName: `<persona-slug>`, Role: the persona, Model: `pro` for
      planner/plan-reviewer/evaluator, `flash` otherwise, Workspace: `inherit`).
-   - Session model: continue on a Gemini model (`pro` for planning work).
+   - Session model: continue on a Gemini model (`gemini-pro-orchestrator-neon`
+     or `gemini-4-neon` / `gemini-4-carbon` as `pro` for planning/delivery work,
+     `gemini-4-hydrogen` for fast execution).
 3. **Report it:** `ℹ Model fallback: <persona> ran on Gemini <tier> (Claude: <error>)`.
 4. **Keep the gate.** A review or plan review still has to happen on the
    fallback model; escalate only if the Gemini run also fails.

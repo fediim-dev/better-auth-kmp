@@ -53,11 +53,22 @@ function realPath(p) {
     return p;
   }
 }
-let repoRoot = cwd;
-try {
-  repoRoot = require('child_process').execFileSync('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || cwd;
-} catch (err) {
-  // not a git repo: the cwd is the root
+let repoRoot = '';
+{
+  let dir = realPath(cwd);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, '.git'))) { repoRoot = dir; break; }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+}
+if (!repoRoot) {
+  try {
+    repoRoot = require('child_process').execFileSync('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || cwd;
+  } catch (err) {
+    repoRoot = cwd;
+  }
 }
 repoRoot = realPath(repoRoot);
 const toolInput = payload.tool_input || {};
@@ -214,12 +225,12 @@ const content = toolInput.content || '';
 const newString = toolInput.new_string || toolInput.newString || '';
 
 const secretPatterns = [
-  new RegExp("(?:api[_-]?key|secret|password|token)\\s*[:=]\\s*['\"][A-Za-z0-9_\\-\\/+]{12,}['\"]", "i"),
-  new RegExp("-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", ""),
-  new RegExp("AKIA[0-9A-Z]{16}", ""),
-  new RegExp("\\bgh[pousr]_[A-Za-z0-9]{36}\\b", ""),
-  new RegExp("\\bgithub_pat_[A-Za-z0-9_]{22,}\\b", ""),
-  new RegExp("\\bsk-ant-[A-Za-z0-9_-]{20,}\\b", "")
+  { label: "hardcoded credential assignment", re: new RegExp("(?:api[_-]?key|secret|password|token)\\s*[:=]\\s*['\"][A-Za-z0-9_\\-\\/+]{12,}['\"]", "i") },
+  { label: "private key header", re: new RegExp("-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", "") },
+  { label: "AWS access key ID", re: new RegExp("AKIA[0-9A-Z]{16}", "") },
+  { label: "GitHub classic token", re: new RegExp("\\bgh[pousr]_[A-Za-z0-9]{36}\\b", "") },
+  { label: "GitHub fine-grained token", re: new RegExp("\\bgithub_pat_[A-Za-z0-9_]{22,}\\b", "") },
+  { label: "Anthropic API key", re: new RegExp("\\bsk-ant-[A-Za-z0-9_-]{20,}\\b", "") }
 ];
 const INVISIBLE_RE = /[\u202A-\u202E\u2066-\u2069\u200E\u200F\u061C\u200B\u200C\uFEFF]|(?<!\p{Extended_Pictographic}[\uFE0F\u{1F3FB}-\u{1F3FF}]*)\u200D|\u200D(?!\p{Extended_Pictographic})/u;
 const INVISIBLE_HINT = 'write a \\uXXXX escape instead of the literal invisible character';
@@ -229,8 +240,8 @@ function invisibleCodepoint(text) {
 }
 
 for (const pattern of secretPatterns) {
-  if (pattern.test(content) || pattern.test(newString)) {
-    console.error('Hardcoded secret detected.');
+  if (pattern.re.test(content) || pattern.re.test(newString)) {
+    console.error('Hardcoded secret detected (' + pattern.label + ').');
     process.exit(2);
   }
 }
@@ -267,11 +278,22 @@ function realPath(p) {
     return p;
   }
 }
-let repoRoot = cwd;
-try {
-  repoRoot = require('child_process').execFileSync('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || cwd;
-} catch (err) {
-  // not a git repo: the cwd is the root
+let repoRoot = '';
+{
+  let dir = realPath(cwd);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, '.git'))) { repoRoot = dir; break; }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+}
+if (!repoRoot) {
+  try {
+    repoRoot = require('child_process').execFileSync('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || cwd;
+  } catch (err) {
+    repoRoot = cwd;
+  }
 }
 repoRoot = realPath(repoRoot);
 const toolInput = payload.tool_input || {};
@@ -328,8 +350,7 @@ function planFormatErrors(text) {
     if (planText) {
       const errors = planFormatErrors(planText);
       if (errors.length > 0) {
-        console.error('Plan format: fix ' + planPath + ':\n' + errors.map((e) => '- ' + e).join('\n'));
-        process.exit(2);
+        console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: 'Plan format warning (fix before guards.mjs --check-plan): ' + planPath + ': ' + errors.join(' | ') } }));
       }
     }
   }
@@ -361,11 +382,22 @@ function realPath(p) {
     return p;
   }
 }
-let repoRoot = cwd;
-try {
-  repoRoot = require('child_process').execFileSync('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || cwd;
-} catch (err) {
-  // not a git repo: the cwd is the root
+let repoRoot = '';
+{
+  let dir = realPath(cwd);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, '.git'))) { repoRoot = dir; break; }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+}
+if (!repoRoot) {
+  try {
+    repoRoot = require('child_process').execFileSync('git', ['-C', cwd, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || cwd;
+  } catch (err) {
+    repoRoot = cwd;
+  }
 }
 repoRoot = realPath(repoRoot);
 const input = payload.tool_input || {};
@@ -429,8 +461,8 @@ function planScope(text, implicit) {
 const inPlanScope = (scope, file) => scope.paths.some((p) => file === p || file.startsWith(p.replace(/\/+$/, '') + '/')) || scope.justified.some((l) => l.includes(file));
 // The plan of a branch named after its issue number: .fediim/plans/<n>.md or archive/<n>.md.
 const branchPlans = (branch, exists) => {
-  const n = /\d+/.exec(branch || '');
-  return n ? ['.fediim/plans/' + n[0] + '.md', '.fediim/plans/archive/' + n[0] + '.md'].filter(exists) : [];
+  const n = /(?:^|[\/-])#?(\d+)(?=-|$)/.exec(branch || '');
+  return n ? ['.fediim/plans/' + n[1] + '.md', '.fediim/plans/archive/' + n[1] + '.md'].filter(exists) : [];
 };
 
 const rel = filePath ? path.relative(repoRoot, realPath(path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath))).replace(/\\/g, '/') : '';

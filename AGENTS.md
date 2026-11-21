@@ -30,7 +30,7 @@ Triage first (`triage-task.mjs`): Tier 0–1 (docs; ≤2 non-test files, ≤40 l
 the plan and plan-reviewer; Tier 2 plans inline, checked by `guards.mjs --check-plan`; Tier 3–4 add
 the planner and plan-reviewer, Tier 4 (auth, billing, secrets, migrations, hooks, CI, `protectedPaths`)
 the security-reviewer. The PR declares `Tier: <n>`; `guards.mjs` promotes an outgrown Tier 0–1 (plan required).
-### Git & PR workflow  <!-- pack: planning/git-workflow v1.14.0 -->
+### Git & PR workflow  <!-- pack: planning/git-workflow v1.14.1 -->
 One task = one issue = one branch = one PR. You decide what issue to pick next;
 no `ready` label needed. Never pick `needs-human-approval` or `blocked` issues,
 or ones with open dependencies. Self-applying `ready` or clearing gates remains blocked

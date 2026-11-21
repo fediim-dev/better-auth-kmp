@@ -31,4 +31,4 @@ P2 <!-- exactly one of P0/P1/P2/P3; set the matching priority:* label -->
 
 ## Session Profile (optional)
 
-<!-- fenced toml block from fediim session catalog; prefer profile = "<name>", otherwise pick the most suitable current model (claude-opus-5-5 | claude-sonnet-5-5 | claude-haiku-5-5 | claude-fable-5-2 | gemini-4-carbon | gemini-4-argon | gemini-4-hydrogen | gemini-3.8-flash) and effort -->
+<!-- fenced toml block from fediim session catalog; prefer profile = "<name>", otherwise pick the most suitable current model (claude-fable-5-2 | claude-opus-5-5 | claude-sonnet-5-5 | claude-haiku-5-5 | gemini-pro-orchestrator-neon | gemini-pro-orchestrator | gemini-4-neon | gemini-4-carbon | gemini-4-argon | gemini-4-hydrogen | gemini-3.8-flash) and effort -->

@@ -2,6 +2,7 @@ function makeStamp(req) {
   const cp = req('child_process');
   const fs = req('fs');
   const path = req('path');
+  const isRealCi = () => Boolean(process.env.GITHUB_ACTIONS || (process.env.CI && !process.env.FEDIIM_AUTONOMOUS_LOCAL));
   const git = (cwd, args, env) => cp.execFileSync('git', args, { cwd, env: env ? { ...process.env, ...env } : process.env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   const top = (cwd) => git(cwd, ['rev-parse', '--show-toplevel']);
   const treeHash = (cwd) => {
@@ -23,9 +24,9 @@ function makeStamp(req) {
   };
   const file = (root) => path.join(root, '.fediim', 'run', 'verified.json');
   const read = (root) => { try { return JSON.parse(fs.readFileSync(file(root), 'utf8')); } catch (e) { return null; } };
-  // True when every command passed on exactly this tree. CI never short-circuits.
+  // True when every command passed on exactly this tree. Real CI never short-circuits.
   const verifiedFor = (cwd, commands) => {
-    if (process.env.CI) return false;
+    if (isRealCi()) return false;
     try {
       const v = read(top(cwd));
       if (!v || !v.treeHash || !Array.isArray(v.commands) || !commands.every((c) => v.commands.includes(c))) return false;
@@ -50,7 +51,7 @@ function makeStamp(req) {
       fs.writeFileSync(file(root), JSON.stringify({ treeHash: after, headSha, commands, verifiedAt: new Date().toISOString() }, null, 2) + '\n');
     } catch (e) {}
   };
-  return { treeHash, verifiedFor, record };
+  return { treeHash, verifiedFor, record, isRealCi };
 }
 const STEP_RE = /^([ST]\d+)\s+\x60?([^\s\x60:]+)(?::\d+(?:-\d+)?)?\x60?(?:\s+\([^)]+\))?\s*(?:::|[—–-]\s)/;
 const STEP_LIKE_RE = /^(?:[-*]\s+)?\**[ST]\d+\b/;
@@ -101,8 +102,8 @@ function planScope(text, implicit) {
 const inPlanScope = (scope, file) => scope.paths.some((p) => file === p || file.startsWith(p.replace(/\/+$/, '') + '/')) || scope.justified.some((l) => l.includes(file));
 // The plan of a branch named after its issue number: .fediim/plans/<n>.md or archive/<n>.md.
 const branchPlans = (branch, exists) => {
-  const n = /\d+/.exec(branch || '');
-  return n ? ['.fediim/plans/' + n[0] + '.md', '.fediim/plans/archive/' + n[0] + '.md'].filter(exists) : [];
+  const n = /(?:^|[\/-])#?(\d+)(?=-|$)/.exec(branch || '');
+  return n ? ['.fediim/plans/' + n[1] + '.md', '.fediim/plans/archive/' + n[1] + '.md'].filter(exists) : [];
 };
 
 const fs = require('fs');
@@ -123,12 +124,21 @@ const git = (args) => {
     return '';
   }
 };
-const root = git(['rev-parse', '--show-toplevel']) || cwd;
+function findRoot(start) {
+  let dir = path.resolve(start);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, '.git'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return git(['rev-parse', '--show-toplevel']) || start;
+}
+const root = findRoot(cwd);
 const exists = (rel) => fs.existsSync(path.join(root, rel));
 const read = (rel) => { try { return fs.readFileSync(path.join(root, rel), 'utf8'); } catch (e) { return ''; } };
 
-const branch = git(['symbolic-ref', '--short', '-q', 'HEAD']);
-function activePlan() {
+function activePlan(branch) {
   const byBranch = branchPlans(branch, exists)[0];
   if (byBranch) return byBranch;
   let best = '';
@@ -142,16 +152,46 @@ function activePlan() {
   } catch (e) {}
   return best;
 }
-const planPath = activePlan();
+function readSpecAnchor(planPath) {
+  try {
+    const raw = JSON.parse(read('.fediim/run/spec-anchor.json'));
+    if (raw && (raw.goal || (Array.isArray(raw.acs) && raw.acs.length))) {
+      return {
+        ...(raw.issue !== undefined ? { issue: raw.issue } : {}),
+        ...(raw.goal ? { goal: String(raw.goal).trim() } : {}),
+        ...(Array.isArray(raw.acs) ? { acs: raw.acs.map(String).filter(Boolean).slice(0, 4) } : {}),
+      };
+    }
+  } catch (e) {}
+  if (!planPath) return null;
+  const lines = read(planPath).split(/\r?\n/);
+  let sec = '';
+  let goal = '';
+  const acs = [];
+  for (const raw of lines) {
+    const t = raw.trim();
+    if (/^##\s+Goal\b/i.test(t)) { sec = 'goal'; continue; }
+    if (/^##\s+(?:Acceptance Criteria|Definition of Done)\b/i.test(t)) { sec = 'acs'; continue; }
+    if (/^##\s+/.test(t)) { sec = ''; continue; }
+    if (!t) continue;
+    if (sec === 'goal' && !goal) goal = t;
+    else if (sec === 'acs' && acs.length < 4) acs.push(t.replace(/^[-*]\s*(?:\[[ x]\]\s*)?/, ''));
+  }
+  return goal || acs.length ? { ...(goal ? { goal } : {}), ...(acs.length ? { acs } : {}) } : null;
+}
 let verified = null;
 try { verified = JSON.parse(read('.fediim/run/verified.json')); } catch (e) {}
 function writeCheckpoint() {
+  const branch = git(['symbolic-ref', '--short', '-q', 'HEAD']);
+  const planPath = activePlan(branch);
+  const specAnchor = readSpecAnchor(planPath);
   const checkpoint = {
     branch,
     planPath,
     diffStat: git(['diff', '--shortstat', 'HEAD']),
     verifiedTreeHash: verified && verified.treeHash ? verified.treeHash : '',
     lastTestLog: exists('.fediim/run/last-test.log') ? '.fediim/run/last-test.log' : '',
+    ...(specAnchor ? { specAnchor } : {}),
   };
   try {
     fs.mkdirSync(path.join(root, '.fediim', 'run'), { recursive: true });
@@ -159,22 +199,30 @@ function writeCheckpoint() {
     if (!fs.existsSync(ignore)) fs.writeFileSync(ignore, '*\n');
     fs.writeFileSync(path.join(root, '.fediim', 'run', 'checkpoint.json'), JSON.stringify(checkpoint, null, 2) + '\n');
   } catch (e) {}
+  return { branch, planPath, specAnchor };
 }
 
-writeCheckpoint();
 const convo = String(payload.conversationId || '').replace(/[^A-Za-z0-9_-]/g, '');
 let size = 0;
 try { size = fs.statSync(String(payload.transcriptPath || '')).size; } catch (e) {}
+const needAdvice = Boolean(convo && (size > 400 * 1024 || Number(payload.invocationNum) >= 25));
+const flag = convo ? path.join(root, '.fediim', 'run', 'compact-advised-' + convo) : '';
+const cpPath = path.join(root, '.fediim', 'run', 'checkpoint.json');
+let cpFresh = false;
+try { cpFresh = Date.now() - fs.statSync(cpPath).mtimeMs < 30000; } catch (e) {}
+if (cpFresh && (!needAdvice || (flag && fs.existsSync(flag)))) {
+  console.log('{}');
+  process.exit(0);
+}
+const { specAnchor } = writeCheckpoint();
 let message = '';
-if (convo && (size > 400 * 1024 || Number(payload.invocationNum) >= 25)) {
-  const flag = path.join(root, '.fediim', 'run', 'compact-advised-' + convo);
-  if (!fs.existsSync(flag)) {
-    try {
-      fs.mkdirSync(path.dirname(flag), { recursive: true });
-      fs.writeFileSync(flag, '1\n');
-      message = 'Context is getting long. At the next phase boundary run /compact (interactive) or hand the remaining work to a subagent with a file brief; .fediim/run/checkpoint.json holds the task state.';
-    } catch (e) {}
-  }
+if (needAdvice && flag && !fs.existsSync(flag)) {
+  try {
+    fs.mkdirSync(path.dirname(flag), { recursive: true });
+    fs.writeFileSync(flag, '1\n');
+    const goalHint = specAnchor && specAnchor.goal ? ' Goal: ' + specAnchor.goal.replace(/\s+/g, ' ').slice(0, 120) : '';
+    message = 'Context is getting long. At the next phase boundary run /compact (interactive) or hand the remaining work to a subagent with a file brief; .fediim/run/checkpoint.json holds the task state.' + goalHint;
+  } catch (e) {}
 }
 console.log(message ? JSON.stringify({ injectSteps: [{ ephemeralMessage: message }] }) : '{}');
 process.exit(0);

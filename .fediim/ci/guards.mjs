@@ -14,14 +14,15 @@ const TEST_CMD = "./gradlew check -q";
 const BUILD_CMD = "./gradlew compileAllTargets -q";
 const LINT_CMD = "";
 const LIMITS = {"maxPrLines":450,"maxPrFiles":12,"maxFileLines":500};
+const STRICT_HOOKS = false;
 const STATIC_ONLY = process.argv.includes('--static-only');
 const SECRET_PATTERNS = [
-  new RegExp("(?:api[_-]?key|secret|password|token)\\s*[:=]\\s*['\"][A-Za-z0-9_\\-\\/+]{12,}['\"]", "i"),
-  new RegExp("-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", ""),
-  new RegExp("AKIA[0-9A-Z]{16}", ""),
-  new RegExp("\\bgh[pousr]_[A-Za-z0-9]{36}\\b", ""),
-  new RegExp("\\bgithub_pat_[A-Za-z0-9_]{22,}\\b", ""),
-  new RegExp("\\bsk-ant-[A-Za-z0-9_-]{20,}\\b", "")
+  { label: "hardcoded credential assignment", re: new RegExp("(?:api[_-]?key|secret|password|token)\\s*[:=]\\s*['\"][A-Za-z0-9_\\-\\/+]{12,}['\"]", "i") },
+  { label: "private key header", re: new RegExp("-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", "") },
+  { label: "AWS access key ID", re: new RegExp("AKIA[0-9A-Z]{16}", "") },
+  { label: "GitHub classic token", re: new RegExp("\\bgh[pousr]_[A-Za-z0-9]{36}\\b", "") },
+  { label: "GitHub fine-grained token", re: new RegExp("\\bgithub_pat_[A-Za-z0-9_]{22,}\\b", "") },
+  { label: "Anthropic API key", re: new RegExp("\\bsk-ant-[A-Za-z0-9_-]{20,}\\b", "") }
 ];
 const PROTECTED_PREFIXES = ["auth/","billing/"];
 const BLOCKED_PREFIXES = ["src/generated/"];
@@ -47,6 +48,7 @@ function makeStamp(req) {
   const cp = req('child_process');
   const fs = req('fs');
   const path = req('path');
+  const isRealCi = () => Boolean(process.env.GITHUB_ACTIONS || (process.env.CI && !process.env.FEDIIM_AUTONOMOUS_LOCAL));
   const git = (cwd, args, env) => cp.execFileSync('git', args, { cwd, env: env ? { ...process.env, ...env } : process.env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   const top = (cwd) => git(cwd, ['rev-parse', '--show-toplevel']);
   const treeHash = (cwd) => {
@@ -68,9 +70,9 @@ function makeStamp(req) {
   };
   const file = (root) => path.join(root, '.fediim', 'run', 'verified.json');
   const read = (root) => { try { return JSON.parse(fs.readFileSync(file(root), 'utf8')); } catch (e) { return null; } };
-  // True when every command passed on exactly this tree. CI never short-circuits.
+  // True when every command passed on exactly this tree. Real CI never short-circuits.
   const verifiedFor = (cwd, commands) => {
-    if (process.env.CI) return false;
+    if (isRealCi()) return false;
     try {
       const v = read(top(cwd));
       if (!v || !v.treeHash || !Array.isArray(v.commands) || !commands.every((c) => v.commands.includes(c))) return false;
@@ -95,7 +97,7 @@ function makeStamp(req) {
       fs.writeFileSync(file(root), JSON.stringify({ treeHash: after, headSha, commands, verifiedAt: new Date().toISOString() }, null, 2) + '\n');
     } catch (e) {}
   };
-  return { treeHash, verifiedFor, record };
+  return { treeHash, verifiedFor, record, isRealCi };
 }
 const stamp = makeStamp(createRequire(import.meta.url));
 const FILE_EXT_RE = /\.(?:[cm]?[jt]sx?|json|toml|ya?ml|md|rst|adoc|txt|kt|kts|java|py|go|rs|rb|sh|xml|gradle|properties|html?|css|sql)$/i;
@@ -130,6 +132,22 @@ function planFormatErrors(text) {
   return errors;
 }
 
+const PLAN_IDENT_RE = /^[A-Za-z_$][\w$.]{2,}$/;
+const PLAN_IDENT_SKIP = new Set(['node', 'npm', 'npx', 'git', 'true', 'false', 'null', 'undefined']);
+let planTracked = null;
+function trackedFiles() {
+  if (planTracked === null) {
+    try { planTracked = execFileSync('git', ['ls-files'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean); } catch { planTracked = []; }
+  }
+  return planTracked;
+}
+// One git grep for all identifiers (the gate has a 150ms budget); null = cannot tell, so no warnings.
+function treeMatches(idents) {
+  if (idents.length === 0) return [];
+  try {
+    return execFileSync('git', ['grep', '-F', '-o', '-h', '-I', ...idents.flatMap((i) => ['-e', i]), '--', '.', ':(exclude).fediim/plans'], { encoding: 'utf8', maxBuffer: 1 << 26, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n');
+  } catch (e) { return e.status === 1 ? [] : null; }
+}
 function checkPlanFile(planPath) {
   if (!existsSync(planPath)) return ['plan file not found: ' + planPath];
   const text = readFileSync(planPath, 'utf8');
@@ -141,6 +159,7 @@ function checkPlanFile(planPath) {
   const mapped = [];
   let hasAc = false;
   let section = '';
+  const idents = [];
   for (const raw of lines) {
     const line = raw.trim();
     const heading = /^##\s+(\w+)/.exec(line);
@@ -158,10 +177,25 @@ function checkPlanFile(planPath) {
     if (!m) continue;
     defined.add(m[1]);
     const target = m[2].split('#')[0];
-    if (!(target.includes('/') || FILE_EXT_RE.test(target))) continue;
+    // Only the change text after the path counts: src/new.ts must not read as "creates".
     const creates = /\b(create|add|new|introduce)\b/i.test(line.slice(line.indexOf(m[2]) + m[2].length));
-    if (!existsSync(join(process.cwd(), target)) && !creates) errors.push(m[1] + ' targets ' + target + ', which does not exist and is not created by the plan');
+    for (const ident of new Set([...line.matchAll(/\x60([^\x60\s]+)\x60/g)].map((t) => t[1]))) {
+      if (!PLAN_IDENT_RE.test(ident) || PLAN_IDENT_SKIP.has(ident) || ident === m[2] || FILE_EXT_RE.test(ident)) continue;
+      if (!/[a-z][A-Z]|_|\.|^[A-Z0-9$]{3,}$/.test(ident)) continue;
+      if (!creates) idents.push([m[1], ident]);
+    }
+    if (!(target.includes('/') || FILE_EXT_RE.test(target))) continue;
+    const exists = existsSync(join(process.cwd(), target));
+    // A bare name is a root path; it is ambiguous only when the root file is absent.
+    if (!target.includes('/') && !exists && trackedFiles().filter((f) => f.endsWith('/' + target)).length > 1) {
+      errors.push(m[1] + ' targets ambiguous bare file name ' + target + '; use the full repo path');
+      continue;
+    }
+    if (!exists && !creates) errors.push(m[1] + ' targets ' + target + ', which does not exist and is not created by the plan');
   }
+  const found = treeMatches([...new Set(idents.map((x) => x[1]))]);
+  // -o prints the longest match, so fooBar inside fooBarBaz shows up only as a substring.
+  if (found) for (const [id, ident] of idents) if (!found.some((f) => f.includes(ident))) console.error('warning: ' + id + ' names ' + ident + ', not found in the tree');
   if (!hasAc || mapped.length === 0) errors.push('plan has no AC: line mapping every acceptance criterion to S<n>/T<n> ids');
   for (const [ac, id] of mapped) {
     if (/^[ST]\d+$/.test(id) && !defined.has(id)) errors.push(ac + ' maps to ' + id + ', which has no line in ## Steps or ## Tests');
@@ -233,9 +267,25 @@ function planScope(text, implicit) {
 const inPlanScope = (scope, file) => scope.paths.some((p) => file === p || file.startsWith(p.replace(/\/+$/, '') + '/')) || scope.justified.some((l) => l.includes(file));
 // The plan of a branch named after its issue number: .fediim/plans/<n>.md or archive/<n>.md.
 const branchPlans = (branch, exists) => {
-  const n = /\d+/.exec(branch || '');
-  return n ? ['.fediim/plans/' + n[0] + '.md', '.fediim/plans/archive/' + n[0] + '.md'].filter(exists) : [];
+  const n = /(?:^|[\/-])#?(\d+)(?=-|$)/.exec(branch || '');
+  return n ? ['.fediim/plans/' + n[1] + '.md', '.fediim/plans/archive/' + n[1] + '.md'].filter(exists) : [];
 };
+function resolveDefaultBranch(runGit) {
+  let def = '';
+  try { def = (runGit(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']) || '').trim(); } catch (e) {}
+  return def;
+}
+function resolveBaseRef(runGit, headRef) {
+  const def = resolveDefaultBranch(runGit);
+  const candidates = [...new Set([def, 'origin/main', 'main', 'origin/master', 'master'].filter(Boolean))];
+  for (const ref of candidates) {
+    try {
+      const mb = (runGit(['merge-base', headRef || 'HEAD', ref]) || '').trim();
+      if (mb) return mb;
+    } catch (e) {}
+  }
+  return '';
+}
 
 // M85: mechanical plan gate (Tier 2): no git, no LLM.
 if (process.argv.includes('--check-plan')) {
@@ -264,17 +314,19 @@ const log = (msg) => console.log('[fediim-guards] ' + msg);
 const fail = (msg) => { failures.push(msg); console.error('[fediim-guards] FAIL: ' + msg); };
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim();
 
+const runGit = (args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+
 let base = process.env.BASE_SHA || '';
 const head = process.env.HEAD_SHA || 'HEAD';
 if (!base) {
-  try {
-    base = sh('git merge-base origin/main HEAD');
-  } catch {
-    fail('cannot resolve diff base: set BASE_SHA/HEAD_SHA or ensure origin/main exists.');
+  base = resolveBaseRef(runGit, head);
+  if (!base) {
+    fail('cannot resolve diff base: set BASE_SHA/HEAD_SHA or ensure the default branch (origin/main, main, origin/master, master) exists.');
     process.exit(1);
   }
 }
-log('diff range ' + base.slice(0, 12) + '..' + (head === 'HEAD' ? 'HEAD' : head.slice(0, 12)));
+const workingTree = STATIC_ONLY && !process.env.HEAD_SHA;
+log('diff range ' + base.slice(0, 12) + '..' + (workingTree ? 'WORKTREE' : head === 'HEAD' ? 'HEAD' : head.slice(0, 12)));
 
 // Local run (no HEAD_SHA): the diff only sees commits, so uncommitted code
 // would pass unchecked. Docs-only dirt is harmless.
@@ -289,13 +341,19 @@ if (!process.env.HEAD_SHA && !STATIC_ONLY) {
   }
 }
 
-const changedFiles = sh('git diff --name-only --no-renames ' + base + ' ' + head)
+const trackedRange = workingTree ? [base] : [base, head];
+const diffNames = execFileSync('git', ['diff', '--name-only', '--no-renames', ...trackedRange], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
   .split('\n').filter(Boolean);
+const untracked = workingTree
+  ? execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+      .split('\n').filter((f) => f && existsSync(f))
+  : [];
+const changedFiles = workingTree ? [...new Set([...diffNames, ...untracked])].sort() : diffNames;
 
-// Added lines per file from a zero-context diff.
+// Added lines per file from a zero-context diff (plus untracked working-tree files in --static-only).
 const addedLines = new Map();
 {
-  const diff = execSync('git diff -U0 ' + base + ' ' + head, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const diff = execFileSync('git', ['diff', '-U0', ...trackedRange], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   let current = '';
   for (const line of diff.split('\n')) {
     if (line.startsWith('+++ b/')) { current = line.slice(6); continue; }
@@ -305,13 +363,28 @@ const addedLines = new Map();
       addedLines.get(current).push(line.slice(1));
     }
   }
+  for (const f of untracked) {
+    try {
+      const buf = readFileSync(f);
+      if (buf.includes(0)) continue;
+      const lines = buf.toString('utf8').replace(/\r?\n$/, '');
+      addedLines.set(f, lines ? lines.split(/\r?\n/) : []);
+    } catch {}
+  }
+}
+const diffRows = execFileSync('git', ['diff', '--numstat', '--no-renames', ...trackedRange], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  .split('\n').filter(Boolean)
+  .map((row) => { const [add, del, ...rest] = row.split('\t'); return { file: rest.join('\t'), lines: (Number(add) || 0) + (Number(del) || 0) }; });
+for (const f of untracked) {
+  const lines = addedLines.get(f);
+  diffRows.push({ file: f, lines: lines ? lines.length : 0 });
 }
 
 // (A) Secret scan over added lines.
 for (const [file, lines] of addedLines) {
   for (const line of lines) {
     for (const pattern of SECRET_PATTERNS) {
-      if (pattern.test(line)) fail('secret pattern in added lines of ' + file);
+      if (pattern.re.test(line)) fail('secret pattern in added lines of ' + file + ' (' + pattern.label + ')');
     }
   }
 }
@@ -368,9 +441,7 @@ for (const file of changedFiles) {
 const gitText = (ref, file) => { try { return execFileSync('git', ['show', ref + ':' + file], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return null; } };
 const countLines = (text) => (text === '' ? 0 : text.replace(/\n$/, '').split('\n').length);
 {
-  const sourceRows = sh('git diff --numstat --no-renames ' + base + ' ' + head).split('\n').filter(Boolean)
-    .map((row) => { const [add, del, ...rest] = row.split('\t'); return { file: rest.join('\t'), lines: (Number(add) || 0) + (Number(del) || 0) }; })
-    .filter((r) => isSourceFile(r.file));
+  const sourceRows = diffRows.filter((r) => isSourceFile(r.file));
   const planFiles = [...new Set([...changedFiles.filter((f) => PLAN_FILE_RE.test(f) && existsSync(join(process.cwd(), f))), ...branchPlans(branch, (f) => existsSync(join(process.cwd(), f)))])].sort();
   const planTexts = planFiles.map((f) => readFileSync(join(process.cwd(), f), 'utf8'));
   if (planTexts.length > 0) {
@@ -378,7 +449,11 @@ const countLines = (text) => (text === '' ? 0 : text.replace(/\n$/, '').split('\
     try { implicit = (JSON.parse(readFileSync(guardsPath, 'utf8')).implicitSharedFiles || []).map((r) => ({ when: new RegExp(r.when), implies: r.implies })); } catch {}
     const scopes = planTexts.map((t) => planScope(t, implicit));
     for (const { file } of sourceRows) {
-      if (!scopes.some((s) => inPlanScope(s, file))) fail('diff is not within the plan: ' + file + ' is named by no S<n>/T<n> line of ' + planFiles.join(', ') + ' (add an S<n> line, justify it in an L<n> line, or revert it)');
+      if (!scopes.some((s) => inPlanScope(s, file))) {
+        const msg = 'diff is not within the plan: ' + file + ' is named by no S<n>/T<n> line of ' + planFiles.join(', ') + ' (add an S<n> line, justify it in an L<n> line, or revert it)';
+        if (STRICT_HOOKS) fail(msg);
+        else log('warning: ' + msg);
+      }
     }
   }
   const prLines = sourceRows.reduce((n, r) => n + r.lines, 0);
@@ -391,7 +466,7 @@ const countLines = (text) => (text === '' ? 0 : text.replace(/\n$/, '').split('\
     log('warning: large PR (' + summary + '); consider splitting before it reaches ' + LIMITS.maxPrLines + ' lines or ' + LIMITS.maxPrFiles + ' files');
   }
   for (const { file } of sourceRows) {
-    const now = gitText(head, file);
+    const now = workingTree ? (existsSync(file) ? readFileSync(file, 'utf8') : null) : gitText(head, file);
     if (now === null) continue;
     const nowLines = countLines(now);
     if (nowLines <= LIMITS.maxFileLines) continue;
@@ -454,7 +529,9 @@ if (existsSync(assumptionsPath)) {
 const headSlug = (h) => h.trim().toLowerCase().replace(/[^\w\- ]/g, '').replace(/ /g, '-');
 function anchorResolves(path, id) {
   let doc;
-  try { doc = execSync('git show ' + head + ':' + path, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }); } catch { return false; }
+  try {
+    doc = workingTree ? readFileSync(join(process.cwd(), path), 'utf8') : execFileSync('git', ['show', head + ':' + path], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch { return false; }
   return doc.split('\n').some((l) => {
     const h = /^#{1,6}\s+(.*?)\s*#*\s*$/.exec(l);
     return (h && headSlug(h[1]) === id) || (l.startsWith(id) && !/\w/.test(l.charAt(id.length)));
@@ -472,8 +549,9 @@ function checkTarget(planFile, lineId, target) {
     fail('plan ' + planFile + ' ' + lineId + ' anchor #' + anchor + ' does not resolve in ' + targetPath + ' at the head version');
   }
 }
-const addedPlans = sh('git diff --name-only --no-renames --diff-filter=A ' + base + ' ' + head)
-  .split('\n').filter((f) => PLAN_FILE_RE.test(f));
+const trackedAdded = execFileSync('git', ['diff', '--name-only', '--no-renames', '--diff-filter=A', ...trackedRange], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  .split('\n');
+const addedPlans = [...new Set([...trackedAdded, ...untracked])].filter((f) => PLAN_FILE_RE.test(f));
 for (const planFile of addedPlans) {
   const absPlan = join(process.cwd(), planFile);
   if (!existsSync(absPlan)) continue;
@@ -535,16 +613,14 @@ if (prBody) {
 const declaredMatch = /^\s*Tier:\s*([0-4])\b/im.exec(prBody);
 const declaredTier = declaredMatch ? Number(declaredMatch[1]) : (/^\s*Fast-path:\s*trivial\b/im.test(prBody) ? 1 : null);
 {
-  const rows = sh('git diff --numstat --no-renames ' + base + ' ' + head).split('\n').filter(Boolean).map((row) => {
-    const [add, del, ...rest] = row.split('\t');
-    return { file: rest.join('\t'), lines: (Number(add) || 0) + (Number(del) || 0) };
-  });
-  const actual = classify(rows, []);
+  const actual = classify(diffRows, []);
   if (declaredTier !== null && declaredTier < 2 && actual.tier >= 2 && !changedFiles.some((f) => PLAN_FILE_RE.test(f))) {
     fail('Tier ' + declaredTier + ' declared but the diff classifies as Tier ' + actual.tier + ' (' + actual.nonTestFiles + ' non-test files, ' + actual.nonTestLines + ' non-test lines): commit .fediim/plans/<n>.md to promote it to Tier 2, or split the change');
   }
   if (actual.security.length > 0 && !/^\s*Security review:\s*VERDICT:\s*pass\b/im.test(prBody) && !existsSync(approvalPath)) {
-    fail('Tier 4: ' + actual.security.slice(0, 3).join(', ') + ' touched without security-reviewer approval (PR body line "Security review: VERDICT: pass", or ' + approvalPath + ')');
+    const msg = 'Tier 4: ' + actual.security.slice(0, 3).join(', ') + ' touched without security-reviewer approval (PR body line "Security review: VERDICT: pass", or ' + approvalPath + ')';
+    if (STATIC_ONLY && !prBody) log('note: ' + msg);
+    else fail(msg);
   }
 }
 

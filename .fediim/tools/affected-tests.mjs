@@ -22,6 +22,22 @@ const isTestFile = (file) => TEST_PATH_RE.test(file) || TEST_NAME_RE.test(file);
 const isLockFile = (file) => LOCK_RE.test(file);
 const isGeneratedFile = (file) => GENERATED_RE.test(file);
 const isSourceFile = (file) => SOURCE_EXT_RE.test(file) && !isTestFile(file) && !isLockFile(file) && !isGeneratedFile(file);
+function resolveDefaultBranch(runGit) {
+  let def = '';
+  try { def = (runGit(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']) || '').trim(); } catch (e) {}
+  return def;
+}
+function resolveBaseRef(runGit, headRef) {
+  const def = resolveDefaultBranch(runGit);
+  const candidates = [...new Set([def, 'origin/main', 'main', 'origin/master', 'master'].filter(Boolean))];
+  for (const ref of candidates) {
+    try {
+      const mb = (runGit(['merge-base', headRef || 'HEAD', ref]) || '').trim();
+      if (mb) return mb;
+    } catch (e) {}
+  }
+  return '';
+}
 
 const git = (args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
 function execute(cmd) {
@@ -37,10 +53,7 @@ let root;
 try { root = git(['rev-parse', '--show-toplevel']).trim(); } catch { if (run) execute(TEST_CMD); process.exit(0); }
 process.chdir(root);
 
-let base = '';
-for (const ref of ['main', 'origin/main']) {
-  try { base = git(['merge-base', 'HEAD', ref]).trim(); break; } catch { /* try the next ref */ }
-}
+const base = resolveBaseRef(git, 'HEAD');
 const lines = (out) => out.split('\n').filter(Boolean);
 const changed = new Set([...lines(git(['diff', '--name-only', base || 'HEAD'])), ...lines(git(['ls-files', '--others', '--exclude-standard']))]);
 const files = lines(git(['ls-files', '--cached', '--others', '--exclude-standard'])).filter((f) => existsSync(f) && !isGeneratedFile(f));
@@ -54,9 +67,25 @@ function resolveRel(from, spec) {
   const swapped = (SWAP[target.slice(stem.length)] || []).map((e) => stem + e);
   return [...swapped, ...EXTS.map((e) => target + e)].find((c) => fileSet.has(c));
 }
+function resolvePyAbs(modPath) {
+  return [modPath + '.py', modPath + '/__init__.py', 'src/' + modPath + '.py', 'src/' + modPath + '/__init__.py'].find((c) => fileSet.has(c));
+}
 const kotlinIndex = new Map();
-for (const f of files) if (f.endsWith('.kt')) kotlinIndex.set(f.replace(/\.kt$/, ''), f);
+const kotlinBySuffix = new Map();
+for (const f of files) {
+  if (!f.endsWith('.kt')) continue;
+  const stem = f.replace(/\.kt$/, '');
+  kotlinIndex.set(stem, f);
+  let idx = -1;
+  for (;;) {
+    const seg = '/' + (idx < 0 ? stem : stem.slice(idx + 1));
+    if (!kotlinBySuffix.has(seg)) kotlinBySuffix.set(seg, f);
+    idx = stem.indexOf('/', idx + 1);
+    if (idx < 0) break;
+  }
+}
 function importsOf(file) {
+  if (!/\.([cm]?[jt]sx?|py|kt)$/.test(file)) return [];
   let text;
   try { text = readFileSync(file, 'utf8'); } catch { return []; }
   const out = [];
@@ -68,11 +97,20 @@ function importsOf(file) {
       const mod = m[2].replace(/\./g, '/');
       out.push(resolveRel(file, dir + (mod || '.')), ...(mod ? [] : m[3].split(',').map((n) => resolveRel(file, dir + n.trim()))));
     }
+    for (const m of text.matchAll(/^\s*from\s+(?!\.)([\w.]+)\s+import\s+([\w, ]+)/gm)) {
+      const baseMod = m[1].replace(/\./g, '/');
+      out.push(resolvePyAbs(baseMod), ...m[2].split(',').map((n) => resolvePyAbs(baseMod + '/' + n.trim().split(/\s+as\s+/)[0])));
+    }
+    for (const m of text.matchAll(/^\s*import\s+([\w., ]+)/gm)) {
+      for (const raw of m[1].split(',')) {
+        const mod = raw.trim().split(/\s+as\s+/)[0];
+        if (mod) out.push(resolvePyAbs(mod.replace(/\./g, '/')));
+      }
+    }
   } else if (file.endsWith('.kt')) {
     for (const m of text.matchAll(/^import\s+([\w.]+)/gm)) {
-      const suffix = '/' + m[1].replace(/\./g, '/');
-      const hit = [...kotlinIndex].find(([k]) => ('/' + k).endsWith(suffix));
-      if (hit) out.push(hit[1]);
+      const hit = kotlinBySuffix.get('/' + m[1].replace(/\./g, '/'));
+      if (hit) out.push(hit);
     }
     const stem = file.replace(/Tests?\.kt$/, '').replace(/\.kt$/, '');
     const twin = kotlinIndex.get(stem);
@@ -84,7 +122,11 @@ function importsOf(file) {
 // Reverse edges: file -> files that import it.
 const importedBy = new Map();
 for (const f of files) {
-  for (const dep of importsOf(f)) importedBy.set(dep, [...(importedBy.get(dep) || []), f]);
+  for (const dep of importsOf(f)) {
+    let list = importedBy.get(dep);
+    if (!list) importedBy.set(dep, (list = []));
+    list.push(f);
+  }
 }
 const seen = new Set();
 const queue = [...changed].filter((f) => fileSet.has(f));

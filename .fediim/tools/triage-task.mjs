@@ -78,6 +78,22 @@ function emitTelemetry(kind, name, attrs) {
   if (!telemetryOn) return;
   try { tmSpawn(process.execPath, [TELEMETRY_TOOL, 'span', kind, name, JSON.stringify(attrs)], { detached: true, stdio: 'ignore' }).unref(); } catch {}
 }
+function resolveDefaultBranch(runGit) {
+  let def = '';
+  try { def = (runGit(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']) || '').trim(); } catch (e) {}
+  return def;
+}
+function resolveBaseRef(runGit, headRef) {
+  const def = resolveDefaultBranch(runGit);
+  const candidates = [...new Set([def, 'origin/main', 'main', 'origin/master', 'master'].filter(Boolean))];
+  for (const ref of candidates) {
+    try {
+      const mb = (runGit(['merge-base', headRef || 'HEAD', ref]) || '').trim();
+      if (mb) return mb;
+    } catch (e) {}
+  }
+  return '';
+}
 
 const args = process.argv.slice(2);
 const flag = (name) => { const i = args.indexOf(name); return i < 0 ? undefined : args[i + 1]; };
@@ -130,7 +146,7 @@ if (args.includes('--issue')) {
 } else if (args.includes('--verify-diff')) {
   const head = flag('--head') || process.env.HEAD_SHA || 'HEAD';
   let base = flag('--base') || process.env.BASE_SHA || '';
-  if (!base) { try { base = git(['merge-base', 'origin/main', head]); } catch { die('cannot resolve diff base: pass --base or set BASE_SHA'); } }
+  if (!base) { base = resolveBaseRef(git, head); if (!base) die('cannot resolve diff base: pass --base or set BASE_SHA'); }
   const rows = git(['diff', '--numstat', '--no-renames', base, head]).split('\n').filter(Boolean).map((row) => {
     const [add, del, ...rest] = row.split('\t');
     return { file: rest.join('\t'), lines: (Number(add) || 0) + (Number(del) || 0) };
