@@ -1,5 +1,5 @@
 version = 1
-cliVersion = "0.7.0"
+cliVersion = "0.7.1"
 
 [[pack]]
 id = "coding/ai-first-docs"
@@ -513,7 +513,7 @@ packs = [ "planning/model-fallback" ]
 
 [[file]]
 path = ".claude/settings.json"
-hash = "f2ce5e5b3b5650270875258386044e2dce12db19cc08f3afbe6b37ae210cc2d7"
+hash = "e0bafe7d872b44b26186f8540a87f8902175ed852e793a256a399c8f91403f06"
 packs = []
 
 [[file]]
@@ -733,7 +733,7 @@ packs = []
 
 [[file]]
 path = ".fediim/otel-attributes"
-hash = "c8af5af6f0229875085f76147bdd1e0fad0628d5bc153b0c95f1c2eda2d5390e"
+hash = "6c6509ce95b171f071d73d430aa5e5505db5ff9a5e2dd3d41aa05a8194f1cff4"
 packs = []
 
 [[file]]
@@ -793,7 +793,7 @@ packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".fediim/tools/telemetry.mjs"
-hash = "bba29b271b609927c63e485472a55807513a32d48082a660bc72922935a1ee78"
+hash = "e01ff0d0184a54a03743b801ba4f86c20be2a34e8e4ae7ecbb77990b788ff822"
 packs = []
 
 [[file]]
