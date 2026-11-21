@@ -43,6 +43,22 @@ repoRoot = realPath(repoRoot);
 const args = payload.toolCall?.args || payload.tool_input || {};
 const filePath = args.AbsolutePath || args.Path || args.file_path || args.path || '';
 const sliced = ['StartLine', 'EndLine', 'start_line', 'end_line', 'offset', 'limit'].some((k) => args[k] !== undefined);
+// M95: stamp the linked worktree a command runs in; fediim session prune keeps one stamped in the last hour.
+// No git call: in a linked worktree .git is a file naming its admin folder. Fails open.
+function markUsed(dir) {
+  try {
+    let cur = path.resolve(dir);
+    while (!fs.existsSync(path.join(cur, '.git')) && path.dirname(cur) !== cur) cur = path.dirname(cur);
+    const dotGit = path.join(cur, '.git');
+    if (!fs.statSync(dotGit).isFile()) return;
+    const m = /^gitdir: (.+)$/m.exec(fs.readFileSync(dotGit, 'utf8'));
+    if (m) fs.writeFileSync(path.join(path.resolve(cur, m[1].trim()), 'fediim-used'), '');
+  } catch (err) {
+    // not a worktree, or not writable
+  }
+}
+markUsed(cwd);
+if (filePath) markUsed(path.dirname(path.resolve(cwd, filePath)));
 if (filePath && !sliced) {
   try {
     const abs = path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath);

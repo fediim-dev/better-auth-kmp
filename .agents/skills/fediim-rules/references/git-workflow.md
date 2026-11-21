@@ -1,7 +1,7 @@
 <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
-# Git & PR workflow  <!-- pack: planning/git-workflow v1.14.1 -->
+# Git & PR workflow  <!-- pack: planning/git-workflow v1.15.0 -->
 
-One task = one issue = one branch = one PR. You decide what issue to pick next;
+One task = one issue = one branch = one PR, in a worktree (never the main checkout). You decide what issue to pick next;
 no `ready` label needed. Never pick `needs-human-approval` or `blocked` issues,
 or ones with open dependencies. Self-applying `ready` or clearing gates remains blocked
 (hook-enforced) — never work around the hook.
@@ -11,6 +11,10 @@ or ones with open dependencies. Self-applying `ready` or clearing gates remains 
 
 ## Branch, PR, and Definition of Done
 
+- Worktrees live only in `.claude/worktrees/` (Antigravity: its own `~/.gemini/antigravity/worktrees/`).
+  The main checkout stays on the default branch and never gets commits (hook-enforced); run
+  `git pull --ff-only` there before branching and after merges. In Claude Code enter a worktree with
+  the EnterWorktree tool, elsewhere `fediim session <n>`.
 - Branch names: `feat/<task-id>-<slug>` (`fix/`, `chore/` as applicable).
 - PR title starts with the task id (e.g. `T07: <summary>`). PR body is
   `Closes #<n>`, the acceptance-criteria checklist, then

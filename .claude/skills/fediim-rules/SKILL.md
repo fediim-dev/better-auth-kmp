@@ -11,7 +11,7 @@ Read only the reference that matches the task:
 - `references/assumptions-ledger.md` — Use when a requirement is missing or ambiguous mid-task and you are about to pick a default, or before writing an assumption to the task's plan file. (planning/assumptions-ledger v1.8.0)
 - `references/autonomous-loop.md` — Use when configuring or starting an unattended agent run, such as /deliver driving itself from task to task. (planning/autonomous-loop v1.4.0)
 - `references/budgets.md` — Use when a review cycle or task budget is close to its limit, or when a review loop reaches its final cycle. (planning/budgets v1.8.0)
-- `references/git-workflow.md` — Use when creating a branch, committing, opening or finishing a pull request, or requesting review. (planning/git-workflow v1.14.1)
+- `references/git-workflow.md` — Use when creating a branch, committing, opening or finishing a pull request, or requesting review. (planning/git-workflow v1.15.0)
 - `references/implementation-delegation.md` — Use when about to write or change code and deciding whether to make the change yourself or hand it to the implementer subagent. (planning/implementation-delegation v2.0.0)
 - `references/issue-structure.md` — Use when filing, triaging, or choosing the next GitHub issue to work on. (planning/issue-structure v1.6.0)
 - `references/model-fallback.md` — Use when a subagent, bridge or model call fails with a rate limit (429), quota, overload, model_not_found, or a missing Claude bridge. (planning/model-fallback v3.0.0)

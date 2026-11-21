@@ -13,6 +13,8 @@ fediim.lock
 .fediim/plans/archive/
 # Ephemeral build and runtime trees.
 .fediim/worktrees/
+.claude/worktrees/
+.fediim/session-backup/
 .fediim/run/
 .fediim/task-sessions/
 dist/

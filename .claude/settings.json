@@ -18,7 +18,7 @@
     "OTEL_METRICS_EXPORTER": "none",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
     "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT": "http://ntcserver-macmini:6006/v1/traces",
-    "OTEL_RESOURCE_ATTRIBUTES": "fediim.version=0.6.1,fediim.packs=f62ebc8c1ea7,fediim.preset=custom,fediim.experimental=none,fediim.project=better-auth-kmp,openinference.project.name=better-auth-kmp,service.name=fediim,service.version=0.6.1,fediim.autonomy=autonomous,fediim.stacks=kmp+kotlin"
+    "OTEL_RESOURCE_ATTRIBUTES": "fediim.version=0.7.0,fediim.packs=6e29c60ce246,fediim.preset=custom,fediim.experimental=none,fediim.project=better-auth-kmp,openinference.project.name=better-auth-kmp,service.name=fediim,service.version=0.7.0,fediim.autonomy=autonomous,fediim.stacks=kmp+kotlin"
   },
   "sandbox": {
     "enabled": false
@@ -171,7 +171,10 @@
       "Bash(fediim sync *)",
       "Bash(fediim doctor)",
       "Bash(fediim doctor *)",
+      "Bash(fediim session prune)",
+      "Bash(fediim session prune *)",
       "Bash(fediim session *--prepare*)",
+      "Bash(fediim worktree *)",
       "Bash(git branch -d)",
       "Bash(git branch -d *)",
       "Bash(git branch --delete)",

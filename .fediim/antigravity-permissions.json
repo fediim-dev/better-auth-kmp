@@ -37,6 +37,8 @@
     "unsandboxed(git pull)",
     "command(fediim sync)",
     "command(fediim doctor)",
+    "command(fediim session prune)",
+    "command(fediim worktree)",
     "command(git branch -d)",
     "command(git branch --delete)",
     "command(git branch -u)",
