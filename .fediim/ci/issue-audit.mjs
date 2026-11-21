@@ -51,7 +51,7 @@ if (profileAt !== -1) {
   for (const l of section) {
     const m = /^model\s*=\s*["']([^"']+)["']/.exec(l);
     if (m && RETIRED_MODELS.includes(m[1])) {
-      missing.push('RETIRED MODEL: ' + m[1] + ' in ## Session Profile (use claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5, claude-fable-5-2, gemini-4-carbon, gemini-4-argon, gemini-4-hydrogen or gemini-3.8-flash)');
+      missing.push('RETIRED MODEL: ' + m[1] + ' in ## Session Profile (use claude-fable-5-2, claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5, gemini-pro-orchestrator-neon, gemini-pro-orchestrator, gemini-4-neon, gemini-4-carbon, gemini-4-argon, gemini-4-hydrogen or gemini-3.8-flash)');
     }
   }
 }

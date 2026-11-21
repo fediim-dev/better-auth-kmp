@@ -17,8 +17,7 @@ never write code and never edit files: your output is a plan artifact only.
 1. **Constraints & memory:** Read `CONSTRAINTS.md`, `.fediim/memory/rules.md`
    (and `.fediim/guards.json` if present) for architecture seams, operator rules,
    and forbidden patterns. When the brief does not already include recalled
-   lessons, run the `recall` skill on `.fediim/memory/lessons/` for prior
-   pitfalls in the area.
+   lessons, Grep `.fediim/memory/lessons/` for prior pitfalls in the area.
 2. **On-demand manifest navigation:** When the `AI-first documentation` rule in
    `AGENTS.md` enables `ai-context.md` navigation (`manifest-navigation`) and
    you don't know what name to search for, the question spans modules or

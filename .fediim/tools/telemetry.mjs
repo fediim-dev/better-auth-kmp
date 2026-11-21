@@ -21,8 +21,8 @@ import { fileURLToPath } from 'node:url';
 
 const PROJECT = "better-auth-kmp";
 const MANIFEST_ENDPOINT = "http://localhost:6006";
-const VERSION = "0.5.9";
-const PRICING = {"claude-opus-5-5":{"input":4,"output":20,"cacheRead":0.2,"cacheWrite":5},"claude-sonnet-5-5":{"input":2,"output":10,"cacheRead":0.2,"cacheWrite":2.5},"claude-haiku-5-5":{"input":0.1,"output":0.5,"cacheRead":0.01,"cacheWrite":0.125},"gemini-4-carbon":{"input":2,"output":10,"cacheRead":0.1,"cacheWrite":2},"gemini-4-argon":{"input":2,"output":10,"cacheRead":0.1,"cacheWrite":2},"gemini-3.8-flash":{"input":0.75,"output":3.75,"cacheRead":0.075,"cacheWrite":0.75},"gemini-4-hydrogen":{"input":1.5,"output":7.5,"cacheRead":0.15,"cacheWrite":1.5}};
+const VERSION = "0.6.1";
+const PRICING = {"claude-fable-5-2":{"input":8,"output":40,"cacheRead":0.2,"cacheWrite":10},"claude-opus-5-5":{"input":4,"output":20,"cacheRead":0.2,"cacheWrite":5},"claude-sonnet-5-5":{"input":2,"output":10,"cacheRead":0.2,"cacheWrite":2.5},"claude-haiku-5-5":{"input":0.1,"output":0.5,"cacheRead":0.01,"cacheWrite":0.125},"gemini-4-neon":{"input":3,"output":15,"cacheRead":0.15,"cacheWrite":3},"gemini-4-carbon":{"input":2,"output":10,"cacheRead":0.1,"cacheWrite":2},"gemini-4-argon":{"input":2,"output":10,"cacheRead":0.1,"cacheWrite":2},"gemini-3.8-flash":{"input":0.75,"output":3.75,"cacheRead":0.075,"cacheWrite":0.75},"gemini-4-hydrogen":{"input":1.5,"output":7.5,"cacheRead":0.075,"cacheWrite":1.5}};
 const SPOOL_CAP = 2 * 1024 * 1024;
 setTimeout(() => process.exit(0), 2000).unref();
 
@@ -91,7 +91,15 @@ function ensureRunDir() {
   mkdirSync(runDir, { recursive: true });
   if (!existsSync(join(runDir, '.gitignore'))) writeFileSync(join(runDir, '.gitignore'), '*\n');
 }
-const readSpool = () => readText(SPOOL).split('\n').filter(Boolean).flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
+function readSpoolSlice() {
+  if (!existsSync(SPOOL)) return { spans: [], bytes: 0 };
+  let buf;
+  try { buf = readFileSync(SPOOL); } catch { return { spans: [], bytes: 0 }; }
+  const end = buf.lastIndexOf(10) + 1;
+  if (end <= 0) return { spans: [], bytes: 0 };
+  const spans = buf.subarray(0, end).toString('utf8').split('\n').filter(Boolean).flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
+  return { spans, bytes: end };
+}
 
 function spool(spans) {
   ensureRunDir();
@@ -121,15 +129,30 @@ async function post(spans) {
 
 // The spool goes first in the same body, so replay is lossless and ordered.
 async function send(spans) {
-  const queued = readSpool();
+  const { spans: queued, bytes: sentBytes } = readSpoolSlice();
   if (queued.length + spans.length === 0) return;
-  if (await post([...queued, ...spans])) { if (queued.length) writeFileSync(SPOOL, ''); } else if (spans.length) spool(spans);
+  if (await post([...queued, ...spans])) {
+    if (sentBytes > 0) {
+      try {
+        const cur = readFileSync(SPOOL);
+        writeFileSync(SPOOL, cur.length <= sentBytes ? '' : cur.subarray(sentBytes));
+      } catch {}
+    }
+  } else if (spans.length) spool(spans);
 }
 
 function usageOf(o) {
   const m = o.message || {};
   const u = m.usage || o.usage;
   if (u) return { input: num(u.input_tokens), output: num(u.output_tokens), cacheRead: num(u.cache_read_input_tokens), cacheWrite: num(u.cache_creation_input_tokens) };
+  if (o.input_tokens !== undefined || o.output_tokens !== undefined) {
+    return {
+      input: num(o.input_tokens),
+      output: num(o.output_tokens),
+      cacheRead: num(o.cache_read_tokens ?? o.cache_read_input_tokens),
+      cacheWrite: num(o.cache_write_tokens ?? o.cache_creation_tokens ?? o.cache_creation_input_tokens),
+    };
+  }
   const g = o.usageMetadata || m.usageMetadata;
   if (!g) return null;
   const cached = num(g.cachedContentTokenCount);
@@ -188,14 +211,15 @@ async function stop() {
   buf.subarray(0, end).toString('utf8').split('\n').forEach((line, i) => {
     let o;
     try { o = JSON.parse(line); } catch { return; }
-    if (o.isCompactSummary || o.subtype === 'compact_boundary') truncations++;
+    if (o.isCompactSummary || o.subtype === 'compact_boundary' || o.type === 'COMPACT' || o.type === 'CONTEXT_TRUNCATED') truncations++;
+    if (o.status === 'ERROR') errors++;
     const content = o.message && o.message.content;
     if (Array.isArray(content)) for (const b of content) if (b && b.type === 'tool_result' && b.is_error === true) errors++;
     const u = usageOf(o);
     const m = o.message || {};
     const model = String(m.model || o.model || o.modelVersion || '');
     if (!u || model === '<synthetic>') return;
-    byId.set(String(m.id || o.id || o.uuid || o.responseId || 'line-' + i), { u, model, ts: Date.parse(o.timestamp) || Date.now() });
+    byId.set(String(m.id || o.id || o.uuid || o.responseId || (o.step_index !== undefined ? 'step-' + o.step_index : 'line-' + i)), { u, model, ts: Date.parse(o.timestamp || o.created_at) || Date.now() });
   });
   const calls = [...byId.values()];
   // Advance the cursor before the network call: the 2s hard exit may fire mid-send, and a

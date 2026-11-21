@@ -25,6 +25,18 @@ eroded to "go green". These rules bound it:
   hold during an autonomous run: it cannot merge, flip approval labels, or add
   a forbidden dependency even when no human is watching each step. That is why
   those gates are mechanical and not merely instructed.
+- **Thin safety rails + bounded self-healing.** Default `lean` hooks block only
+  irreversible, security, exfiltration, and human-gate actions while allowing
+  single-file rollback (`git checkout -- <file>`) and workspace cleanup. When a
+  check fails, classify before acting: (1) *mechanical* (types, lint, single
+  test) → self-heal locally within 3 retries via `affected-tests.mjs`; (2)
+  *spec-adjacent helper* → record `L<n>` under an existing AC within `[limits]`;
+  (3) *spec/AC conflict or human gate* → stop and escalate, never weaken ACs or
+  tests. Pin Goal + ACs in `.fediim/run/spec-anchor.json` so compactions never
+  drift from the original spec.
+- **Independent Critique gate.** Even when a single session or Orchestrator plans
+  and implements, PR and security review always run in isolated reviewer
+  contexts (never self-approved).
 - **Auto-mode is off for gated and safety-critical work.** Anything labelled
   `safety-critical` / `needs-human-approval`, or touching an `autonomy: gated`
   path, gets human-in-the-loop turns — never an unattended loop.

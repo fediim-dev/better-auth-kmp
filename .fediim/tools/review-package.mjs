@@ -44,6 +44,7 @@ function makeStamp(req) {
   const cp = req('child_process');
   const fs = req('fs');
   const path = req('path');
+  const isRealCi = () => Boolean(process.env.GITHUB_ACTIONS || (process.env.CI && !process.env.FEDIIM_AUTONOMOUS_LOCAL));
   const git = (cwd, args, env) => cp.execFileSync('git', args, { cwd, env: env ? { ...process.env, ...env } : process.env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   const top = (cwd) => git(cwd, ['rev-parse', '--show-toplevel']);
   const treeHash = (cwd) => {
@@ -65,9 +66,9 @@ function makeStamp(req) {
   };
   const file = (root) => path.join(root, '.fediim', 'run', 'verified.json');
   const read = (root) => { try { return JSON.parse(fs.readFileSync(file(root), 'utf8')); } catch (e) { return null; } };
-  // True when every command passed on exactly this tree. CI never short-circuits.
+  // True when every command passed on exactly this tree. Real CI never short-circuits.
   const verifiedFor = (cwd, commands) => {
-    if (process.env.CI) return false;
+    if (isRealCi()) return false;
     try {
       const v = read(top(cwd));
       if (!v || !v.treeHash || !Array.isArray(v.commands) || !commands.every((c) => v.commands.includes(c))) return false;
@@ -92,7 +93,7 @@ function makeStamp(req) {
       fs.writeFileSync(file(root), JSON.stringify({ treeHash: after, headSha, commands, verifiedAt: new Date().toISOString() }, null, 2) + '\n');
     } catch (e) {}
   };
-  return { treeHash, verifiedFor, record };
+  return { treeHash, verifiedFor, record, isRealCi };
 }
 
 const [plan, baseRef, headRef] = process.argv.slice(2);

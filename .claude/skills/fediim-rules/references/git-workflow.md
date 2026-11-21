@@ -1,5 +1,5 @@
 <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
-# Git & PR workflow  <!-- pack: planning/git-workflow v1.14.0 -->
+# Git & PR workflow  <!-- pack: planning/git-workflow v1.14.1 -->
 
 One task = one issue = one branch = one PR. You decide what issue to pick next;
 no `ready` label needed. Never pick `needs-human-approval` or `blocked` issues,
@@ -33,7 +33,7 @@ or ones with open dependencies. Self-applying `ready` or clearing gates remains 
   symbols documented per the AI-first documentation rule; PR checklist
   complete. Only then request review.
 - Merge gate: the verified PR head must contain `origin/main`
-  (`git fetch origin main && git merge-base --is-ancestor origin/main HEAD`,
+  (`git fetch origin main`, then in its own call `git merge-base --is-ancestor origin/main HEAD`,
   hook-enforced on `gh pr merge`);
   if main advanced, merge `origin/main` into the branch and re-verify before
   merging.

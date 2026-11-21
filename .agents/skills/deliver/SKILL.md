@@ -42,9 +42,9 @@ yourself and `guards.mjs --check-plan .fediim/plans/<n>.md` replaces plan-review
 3. Include `Alternatives considered` (plan-breadth rule). List interpretations
    of ambiguity: reversible picks go to `## Assumptions`, irreversible ones
    are a human gate.
-4. Name exact modules/files (`S<n>`), interfaces (`I<n>`) and tests (`T<n>`);
-   no TBD, every step groundable in the working tree. Respect `CONSTRAINTS.md`;
-   call out any touch of a protected or `autonomy: gated` path (human gate).
+4. Name exact files (`S<n>`), interfaces (`I<n>`) and tests (`T<n>`) grounded
+   in the tree (no TBD); respect `CONSTRAINTS.md`, flag protected/`autonomy: gated`
+   paths (human gate), and pin Goal + ACs in `.fediim/run/spec-anchor.json`.
 5. Create the branch now (`feat/<task-id>-<slug>`, `fix/`, `chore/`), write the
    plan to `.fediim/plans/<n>.md` in planner format, commit `docs(plan): #<n>`,
    push, comment on the issue linking that commit, and add
@@ -78,35 +78,24 @@ Run `node .fediim/tools/recall.mjs --phase code --plan .fediim/plans/<n>.md`;
 give matched DO/DON'T lines to any implementer.
 
 Who writes the code: load the `fediim-rules` skill and follow `references/implementation-delegation.md`.
-Per dispatch: `node .fediim/tools/brief.mjs <plan> <ids>`; pass its path.
+Per dispatch: `node .fediim/tools/brief.mjs <plan> <ids>`.
 
-1. Stay on the Phase 2 branch and execute `.fediim/plans/<n>.md` (`I<n>`,
-   `T<n>`, `S<n>` in order). One logical change in focused files; a diff outgrowing the plan splits the issue, not
-   the PR. Record reversible gaps as new `L<n>` plan lines (assumptions-ledger
-   rule).
-2. TDD where the task requires it: failing test first, running only that test.
-3. Never touch protected paths without the recorded approval marker; never
-   add a runtime dependency — both `autonomy: gated` (human).
-4. Compile only while coding (build command); tests run once, in Phase 5.
+1. Execute `.fediim/plans/<n>.md` (`I<n>`, `T<n>`, `S<n>` in order) on Phase 2
+   branch; outgrowing diff splits issue, not PR. Log reversible helpers as
+   `L<n>` under an existing AC; roll back failed attempts via `git checkout -- <file>`.
+2. TDD where required: failing test first (run only that test). Never touch
+   protected paths without approval or add a runtime dep (`autonomy: gated`).
+   Compile only while coding (build command); tests run once, in Phase 5.
 
 ## Phase 5 — Verify
 
-1. Run `triage-task.mjs --verify-diff --declared <tier>`; if `promoted`, Tier 0–1
-   needs `.fediim/plans/<n>.md`, Tier 4 the security-reviewer. Then
-   `node .fediim/tools/pr-prep.mjs --issue <n>`: archives the plan (read it from
-   `archive/`; `.fediim/plans/**` is docs), formats, lints, runs static guards and build + test
-   once (verification-gates rule; a docs-only diff skips it), stamps the tree. Commit
-   the result. Red → fix the root cause within the attempt budget (budgets rule), else escalate and end.
-2. NEVER weaken, skip, or delete a test, guard, or hook to go green; that
+1. Run `node .fediim/tools/preflight.mjs`, then `triage-task.mjs --verify-diff --declared <tier>` (`promoted`: Tier 0–1 needs `.fediim/plans/<n>.md`, Tier 4 `security-reviewer`). Run `node .fediim/tools/pr-prep.mjs --issue <n>`: lint-fixes, formats, lints, runs static guards and build+test once (a docs-only diff skips it; `.fediim/plans/**` is docs); archives to `archive/` & stamps when green. Commit. Red → self-heal by bucket (mechanical ≤3 retries; helper → `L<n>`; spec conflict → STOP).
+2. NEVER weaken, skip, or delete a test, guard, AC, or hook to go green; that
    fails the run: comment on the issue, apply `blocked`.
 
 ## Phase 6 — Pull request
 
-1. Grep `docs/`, README, API specs, docstrings and E2E specs for each changed
-   route, screen, old wording or public identifier; fix stale prose in the
-   same commit. Then `gh pr create`: title starts with the task id, body is
-   `Closes #<n>`, `Tier: <n>`, the acceptance-criteria checklist, and
-   `Plan: .fediim/plans/archive/<n>.md`.
+1. Grep `docs/`, README, API specs, docstrings for changed routes/identifiers; fix stale prose in same commit. Write body: `Closes #<n>`, `Tier: <n>`, AC checklist, `Plan: .fediim/plans/archive/<n>.md`. Run `node .fediim/tools/pr-body-lint.mjs <file> --plan <plan> --fix` (fix FAILs, ignore warnings), then `gh pr create` titled `<task id>: …`.
 2. Comment pr-prep's `Local verification:` block (docs-only: `skipped`)
    on the PR; never wait on CI.
 
@@ -142,10 +131,10 @@ Per dispatch: `node .fediim/tools/brief.mjs <plan> <ids>`; pass its path.
 ## Phase 8 — Merge gate (delivery ends here)
 
 1. If non-doc commits landed after the verified SHA, or `git fetch origin
-   main && git merge-base --is-ancestor origin/main HEAD` fails (merge
-   `origin/main` in), run `node .fediim/tools/pr-prep.mjs` at the PR head, comment
+   main` then (separate call) `git merge-base --is-ancestor origin/main HEAD`
+   fails (merge `origin/main` in), run `node .fediim/tools/pr-prep.mjs` at the PR head, comment
    it. Red → fix, re-review.
-2. You MAY merge with an allowed method (`gh pr merge <n> --merge|--squash|--rebase`,
+2. You MAY merge with an allowed method (`gh pr merge <n> --merge|--rebase|--squash`,
    never `--admin`) only when ALL hold: the independent pr-review verdict is
    pass; local verification is green at the PR head and cited on the PR (a
    CI check blocks only if its steps ran and failed; an outage (billing, no runner,

@@ -29,10 +29,11 @@ regardless of entry point.
 Optional but encouraged: **Files Affected** (paths tagged `[NEW]`/`[MODIFY]`/
 `[DELETE]`), **Related** (linked issues, PRs, or spec files), and **Session
 Profile** (fenced `toml` from `fediim session catalog`, selecting the most
-suitable current model — `claude-opus-5-5` for complex architecture or
-security-critical work, `claude-sonnet-5-5` for standard coding,
-`claude-haiku-5-5` for mechanical/docs edits, or Antigravity `gemini-4-carbon`
-/`gemini-4-hydrogen`/`gemini-3.8-flash`; never retired IDs such as
+suitable current model — `claude-fable-5-2` for frontier architecture or
+security-critical coding, `claude-opus-5-5` for complex design at lower cost,
+`claude-sonnet-5-5` for standard coding, `claude-haiku-5-5` for mechanical/docs
+edits, or Antigravity `gemini-pro-orchestrator-neon`/`gemini-pro-orchestrator`/
+`gemini-4-neon`/`gemini-4-carbon`/`gemini-4-hydrogen`/`gemini-3.8-flash`; never retired IDs such as
 `claude-opus-4-6`, `claude-sonnet-4-5`, `gemini-2.5-pro`, `gemini-3.5-flash-lite` or bare `pro`).
 
 ## Priority (importance)

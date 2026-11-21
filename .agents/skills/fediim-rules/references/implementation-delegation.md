@@ -7,6 +7,11 @@ Code changes estimated above `[delegation] implementLines` in `fediim.toml`
 Workspace: 'share');
 smaller ones you make yourself. You plan, brief and review the diff.
 
+- **Orchestrator sessions.** When running on an Antigravity Orchestrator
+  (`Orchestrator (Neon)` / `Orchestrator (Carbon)` / `Orchestrator (Argon)`),
+  sequential implementation runs directly inside the native Plan↔Hydrogen loop
+  to preserve warm context; still dispatch `implementer` for parallel
+  `Workspace: 'share'` slices or when running on a single-model session.
 - **Estimate & warm-context check.** Count added plus deleted lines from the
   plan before writing code (`implementLines = 0` means always delegate). Keep
   edits inline in your warm session when ≤`implementLines` or when editing a
