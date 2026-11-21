@@ -888,6 +888,169 @@ try {
 process.exit(0);
 
 },
+(require, process, console) => {
+const fs = require('fs');
+const os = require('os');
+
+let payload = {};
+try {
+  payload = JSON.parse(fs.readFileSync(0, 'utf-8'));
+} catch (err) {
+  // unparsable payload: no session id, so the hook allows
+}
+
+const cwd = payload.cwd || process.cwd();
+const cmd = (payload.tool_input || {}).command || '';
+const WORKTREE_HINT = 'Work in a worktree: call the EnterWorktree tool (name <issue>-<slug>), then git branch -m <branch>. If that tool is not available, run: fediim worktree <slug> --branch <branch> and run every later command from the path it prints.';
+const deny = (message) => { console.error(message); process.exit(2); };
+
+const { execFileSync } = require('child_process');
+const path = require('path');
+
+function shellWords(s) {
+  return (s.match(/(?:'[^']*'|"[^"]*"|[^\s'"])+/g) || []).map((w) => w.replace(/['"\\]/g, ''));
+}
+
+const gitCache = new Map();
+function gitOut(dir, args) {
+  const key = dir + '\0' + args.join('\0');
+  if (gitCache.has(key)) return gitCache.get(key);
+  try {
+    const out = execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    gitCache.set(key, out);
+    return out;
+  } catch (err) {
+    gitCache.set(key, '');
+    return '';
+  }
+}
+
+// ponytail: git checkout <existing-branch> is not detected; a later gh pr create from it is.
+// ponytail: M94 gaps: plumbing commits (commit-tree, update-ref) and git switch <existing-branch> in the main checkout are not detected; fediim doctor reports a main checkout off the default branch.
+function taskEvents(command, startDir) {
+  const events = [];
+  let dir = startDir;
+  const masked = command.replace(/'[^']*'|"[^"]*"/g, (q) => q.replace(/[;&|\n()]/g, ' '));
+  for (const segment of masked.split(/&&|\|\||[;|&\n()]/)) {
+    const w = shellWords(segment);
+    if (w[0] === 'cd') { dir = path.resolve(dir, w[1] || '.'); continue; }
+    const start = w.findIndex((x) => !/^\w+=/.test(x));
+    const g = start >= 0 && (w[start] === 'git' || w[start].endsWith('/git')) ? start : -1;
+    if (g >= 0) {
+      let d = dir;
+      let i = g + 1;
+      for (; i < w.length && w[i].startsWith('-'); i++) {
+        if (w[i] === '-C') d = path.resolve(d, w[++i] || '.');
+        else if (/^(-c|--git-dir|--work-tree|--namespace|--exec-path)$/.test(w[i])) i++;
+      }
+      const args = w.slice(i + 1);
+      const flagValue = (re) => { const k = args.findIndex((a) => re.test(a)); return k >= 0 ? args[k + 1] : undefined; };
+      if (w[i] === 'checkout') {
+        const n = flagValue(/^-[bB]$/);
+        if (n) events.push({ name: n, dir: d, kind: 'branch' });
+      } else if (w[i] === 'switch') {
+        const n = flagValue(/^(-c|-C|--create|--force-create)$/);
+        if (n) events.push({ name: n, dir: d, kind: 'branch' });
+      } else if (w[i] === 'commit') {
+        events.push({ dir: d, kind: 'commit' });
+      } else if (w[i] === 'worktree' && args[0] === 'add') {
+        // Only a new branch is a new task: -b/-B, or a bare <path> (git names the
+        // branch after it). --detach or <path> <commit-ish> (verifying main,
+        // updating an existing PR branch for a merge) stays in this session.
+        const rest = args.slice(1);
+        const k = rest.findIndex((a) => /^-[bB]$/.test(a));
+        let n = k >= 0 ? rest[k + 1] : undefined;
+        if (!n && !rest.some((a) => a === '-d' || a === '--detach')) {
+          const positional = [];
+          for (let j = 0; j < rest.length; j++) {
+            if (rest[j] === '--reason') j++;
+            else if (!rest[j].startsWith('-')) positional.push(rest[j]);
+          }
+          if (positional.length === 1) n = path.basename(positional[0]);
+        }
+        const pos = [];
+        for (let j = 0; j < rest.length; j++) {
+          if (/^(-b|-B|--reason)$/.test(rest[j])) j++;
+          else if (!rest[j].startsWith('-')) pos.push(rest[j]);
+        }
+        events.push({ name: n, dir: d, kind: 'worktree', target: pos[0] ? path.resolve(d, pos[0]) : '' });
+      }
+    }
+    if (start >= 0 && w[start] === 'gh' && w[start + 1] === 'pr' && w[start + 2] === 'create') {
+      const k = w.findIndex((a, j) => j > start + 2 && (a === '--head' || a === '-H' || a.startsWith('--head=')));
+      const head = k < 0 ? '' : w[k].startsWith('--head=') ? w[k].slice(7) : w[k + 1] || '';
+      events.push({ name: head.replace(/^[^:]*:/, '') || gitOut(dir, ['symbolic-ref', '--short', '-q', 'HEAD']), dir });
+    }
+  }
+  return events;
+}
+
+function realOrNearest(p) {
+  let cur = path.resolve(p);
+  let rest = '';
+  while (!fs.existsSync(cur) && path.dirname(cur) !== cur) { rest = path.join(path.basename(cur), rest); cur = path.dirname(cur); }
+  return path.join(fs.realpathSync(cur), rest);
+}
+
+function gitPath(dir, arg) {
+  const o = gitOut(dir, ['rev-parse', arg]);
+  return o ? fs.realpathSync(path.resolve(dir, o)) : '';
+}
+
+function isMainCheckout(dir) {
+  try {
+    const a = gitPath(dir, '--git-dir');
+    return a !== '' && a === gitPath(dir, '--git-common-dir');
+  } catch (err) {
+    return false;
+  }
+}
+
+// M94: new work happens in a worktree under .claude/worktrees/. Fails open on any git error.
+function worktreeDenial() {
+  try {
+    for (const ev of taskEvents(cmd, cwd)) {
+      if (ev.kind === 'branch' && isMainCheckout(ev.dir)) return 'New work never starts in the main checkout (' + ev.dir + '). ' + WORKTREE_HINT;
+      if (ev.kind === 'commit' && isMainCheckout(ev.dir)) {
+        const def = gitOut(ev.dir, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']).replace(/^origin\//, '');
+        if (def && def === gitOut(ev.dir, ['symbolic-ref', '--short', '-q', 'HEAD'])) return 'The main checkout stays on ' + def + ' and never gets commits. ' + WORKTREE_HINT;
+      }
+      if (ev.kind === 'worktree' && ev.target) {
+        const common = gitPath(ev.dir, '--git-common-dir');
+        if (!common) continue;
+        const inside = [path.join(path.dirname(common), '.claude', 'worktrees'), path.join(os.homedir(), '.gemini', 'antigravity', 'worktrees')]
+          .some((r) => (realOrNearest(ev.target) + path.sep).startsWith(realOrNearest(r) + path.sep));
+        if (!inside) return 'Worktrees live only in .claude/worktrees/ (or Antigravity\'s own folder). ' + WORKTREE_HINT;
+      }
+    }
+  } catch (err) {
+    // fail open
+  }
+  return '';
+}
+
+const worktreeMessage = worktreeDenial();
+if (worktreeMessage) deny(worktreeMessage);
+
+// M95: stamp the linked worktree a command runs in; fediim session prune keeps one stamped in the last hour.
+// No git call: in a linked worktree .git is a file naming its admin folder. Fails open.
+function markUsed(dir) {
+  try {
+    let cur = path.resolve(dir);
+    while (!fs.existsSync(path.join(cur, '.git')) && path.dirname(cur) !== cur) cur = path.dirname(cur);
+    const dotGit = path.join(cur, '.git');
+    if (!fs.statSync(dotGit).isFile()) return;
+    const m = /^gitdir: (.+)$/m.exec(fs.readFileSync(dotGit, 'utf8'));
+    if (m) fs.writeFileSync(path.join(path.resolve(cur, m[1].trim()), 'fediim-used'), '');
+  } catch (err) {
+    // not a worktree, or not writable
+  }
+}
+markUsed(cwd);
+for (const m of cmd.matchAll(/(?:^|&&|;|\n)\s*cd\s+("[^"]+"|'[^']+'|[^\s;&|]+)/g)) markUsed(path.resolve(cwd, m[1].replace(/^["']|["']$/g, '')));
+process.exit(0);
+
+},
 ];
 for (const body of CHECKS) {
   const r = runCheck(body);

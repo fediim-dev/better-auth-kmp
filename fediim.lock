@@ -1,5 +1,5 @@
 version = 1
-cliVersion = "0.6.1"
+cliVersion = "0.7.0"
 
 [[pack]]
 id = "coding/ai-first-docs"
@@ -75,7 +75,7 @@ version = "1.4.0"
 
 [[pack]]
 id = "planning/git-workflow"
-version = "1.14.1"
+version = "1.15.0"
 
 [[pack]]
 id = "planning/human-gates"
@@ -173,7 +173,7 @@ packs = []
 
 [[file]]
 path = ".agents/hooks/pre-bash.cjs"
-hash = "cfd8738ef184430b8743a78f0a5140e5da01fa00a50af207286526a5008c60e3"
+hash = "1a0cc511507316319fd5c47f3f908f1c86b15f0ee315ceda8013765007d2be0f"
 packs = []
 
 [[file]]
@@ -183,7 +183,7 @@ packs = []
 
 [[file]]
 path = ".agents/hooks/pre-read.cjs"
-hash = "175c8ea66c9e72b67672f3a128584d80e9aaded5a8c9e88f63e2a7741c681f06"
+hash = "a1956ff0f3476335be7af2fa32f167100ee92d96a1a363878201de55241474c9"
 packs = []
 
 [[file]]
@@ -248,7 +248,7 @@ packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".agents/skills/deliver/SKILL.md"
-hash = "5958d894cc1b4dc9b932b33815e9cb91f9a1775411a5f66c1e863f7bd46adf11"
+hash = "7ea041d986f32dabe05066bdaa64c681ce05795c388f232d5f6411d78adfb555"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
@@ -273,7 +273,7 @@ packs = [ "planning/budgets" ]
 
 [[file]]
 path = ".agents/skills/fediim-rules/references/git-workflow.md"
-hash = "2a5eb27245087355ff0f9c53bf32c65a116ce942bfccf8329ba8607b2900c5e4"
+hash = "f300b61290178c38a03134d8513434dfc22dacf961aacc2d22fa606a53a8780b"
 packs = [ "planning/git-workflow" ]
 
 [[file]]
@@ -308,7 +308,7 @@ packs = [ "planning/review-quorum" ]
 
 [[file]]
 path = ".agents/skills/fediim-rules/SKILL.md"
-hash = "7f614a4f95eee347e5fd047ade99276cb748e0552226e60db086b136bcca56a7"
+hash = "228804b0f5514deab58036c78f15778c779bd4bc9ce522aae967b19d727e933f"
 packs = [ "coding/architecture-boundaries", "coding/project-docs", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/git-workflow", "planning/implementation-delegation", "planning/issue-structure", "planning/model-fallback", "planning/parallel-dispatch", "planning/review-quorum" ]
 
 [[file]]
@@ -458,12 +458,12 @@ packs = []
 
 [[file]]
 path = ".claude/hooks/pre-bash.cjs"
-hash = "ba3ddba4798ea233229fdb10e165ea080a2ea4cdc0368a694583b1a6b8a75108"
+hash = "be54c6fbf9f60255c3981eba77bf79485b7402cbe0c0457bd0c9d138b2e8d112"
 packs = []
 
 [[file]]
 path = ".claude/hooks/pre-read.cjs"
-hash = "acc3e8b3e8ab415cc2a808074cbf177068a3afa2f27a7886846f003fdf98b109"
+hash = "56adc45cbdf8abacf307844b1a9dac185545df953aa9e45a0faa69296f310b21"
 packs = []
 
 [[file]]
@@ -513,7 +513,7 @@ packs = [ "planning/model-fallback" ]
 
 [[file]]
 path = ".claude/settings.json"
-hash = "ff303606b481d8cd0bd906dae7beae78331a86ba07f1e9f031df596a77be9115"
+hash = "f2ce5e5b3b5650270875258386044e2dce12db19cc08f3afbe6b37ae210cc2d7"
 packs = []
 
 [[file]]
@@ -528,7 +528,7 @@ packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".claude/skills/deliver/SKILL.md"
-hash = "f27baacb1e6a5c737adea584441090fbacdb9dd1c29ca5cadffcdc2c7bec14fc"
+hash = "e656edd935cbeb4f0c8939b964f433356769dbe3a1c33008d258905afe939421"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
@@ -553,7 +553,7 @@ packs = [ "planning/budgets" ]
 
 [[file]]
 path = ".claude/skills/fediim-rules/references/git-workflow.md"
-hash = "2a5eb27245087355ff0f9c53bf32c65a116ce942bfccf8329ba8607b2900c5e4"
+hash = "f300b61290178c38a03134d8513434dfc22dacf961aacc2d22fa606a53a8780b"
 packs = [ "planning/git-workflow" ]
 
 [[file]]
@@ -588,7 +588,7 @@ packs = [ "planning/review-quorum" ]
 
 [[file]]
 path = ".claude/skills/fediim-rules/SKILL.md"
-hash = "7f614a4f95eee347e5fd047ade99276cb748e0552226e60db086b136bcca56a7"
+hash = "228804b0f5514deab58036c78f15778c779bd4bc9ce522aae967b19d727e933f"
 packs = [ "coding/architecture-boundaries", "coding/project-docs", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/git-workflow", "planning/implementation-delegation", "planning/issue-structure", "planning/model-fallback", "planning/parallel-dispatch", "planning/review-quorum" ]
 
 [[file]]
@@ -708,7 +708,7 @@ packs = [ "coding/debugging-discipline" ]
 
 [[file]]
 path = ".fediim/antigravity-permissions.json"
-hash = "842290c8af10aedd6bbc47ec3ae8252708f850644f76f500c3f62063c045817e"
+hash = "b9576f729a2fda22db4832ada83521326efe561934fd92d1db241956480c95b5"
 packs = []
 
 [[file]]
@@ -733,7 +733,7 @@ packs = []
 
 [[file]]
 path = ".fediim/otel-attributes"
-hash = "c341c9941564438d2d13b534ae974a45e242e40233c8a32018beef29033bee35"
+hash = "c8af5af6f0229875085f76147bdd1e0fad0628d5bc153b0c95f1c2eda2d5390e"
 packs = []
 
 [[file]]
@@ -793,7 +793,7 @@ packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".fediim/tools/telemetry.mjs"
-hash = "40bd2427680839bb8ab2bc991ec8e079276a85946631da3a9305e708d7f0040d"
+hash = "bba29b271b609927c63e485472a55807513a32d48082a660bc72922935a1ee78"
 packs = []
 
 [[file]]
@@ -823,7 +823,7 @@ packs = [ "planning/issue-structure" ]
 
 [[file]]
 path = "AGENTS.md"
-hash = "fd3a2df51ce1e12c653d2cee70a9b2041a5f313bc9ec41f09384eb388abc15b8"
+hash = "dbcae4aed13d5f310765bd3a5073f63fc92e588d6eef9641014dc0dd50e1c0df"
 packs = [ "coding/ai-first-docs", "coding/architecture-boundaries", "coding/base", "coding/debugging-discipline", "coding/no-guessed-apis", "coding/output-discipline", "coding/project-docs", "coding/tdd-gate", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/constraints-register", "planning/deliver-loop", "planning/git-workflow", "planning/human-gates", "planning/inbox-digest", "planning/intake", "planning/issue-structure", "planning/learned-rules", "planning/parallel-dispatch", "planning/plan-breadth", "planning/review-quorum", "planning/self-eval", "planning/spec-lock", "planning/verification-gates", "security/no-hardcoded-secrets", "security/protected-paths", "security/untrusted-task-inputs" ]
 
 [[file]]

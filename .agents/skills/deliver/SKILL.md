@@ -23,6 +23,7 @@ still runs Phase 9 before stopping.
    eligible issue; else the highest-impact open issue. Priority
    (`P0` > `P1` > `P2` > `P3`) breaks ties only.
 4. Label it `in-progress`; work only this issue.
+In the main checkout, run `fediim session prune`, then enter a worktree (Claude: EnterWorktree; else `fediim worktree <slug>`).
 
 ## Phase 2 — Plan
 
@@ -140,7 +141,7 @@ Per dispatch: `node .fediim/tools/brief.mjs <plan> <ids>`.
    CI check blocks only if its steps ran and failed; an outage (billing, no runner,
    startup failure) is named on the PR, local checks stand); the issue/PR is not labelled
    `safety-critical` or `needs-human-approval`; and no `autonomy: gated`
-   path was touched. The merge is yours: never delegate it to the
+   path was touched. The merge is yours (then `fediim session prune`): never delegate it to the
    pr-reviewer.
 3. If any condition fails, comment that the PR is ready and request
    human merge.
