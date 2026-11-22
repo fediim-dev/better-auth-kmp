@@ -1,5 +1,5 @@
 version = 1
-cliVersion = "0.7.2"
+cliVersion = "0.8.0"
 
 [[pack]]
 id = "coding/ai-first-docs"
@@ -513,7 +513,7 @@ packs = [ "planning/model-fallback" ]
 
 [[file]]
 path = ".claude/settings.json"
-hash = "ae2f354e3e52c5b70b34f45a5eaa1e5dc8489b23cc5106d61bc39d368390d876"
+hash = "db7fad9ddb2cd158643c6afafadf18a812778e6e2b07d753fc622887d601934f"
 packs = []
 
 [[file]]
@@ -528,7 +528,7 @@ packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".claude/skills/deliver/SKILL.md"
-hash = "e656edd935cbeb4f0c8939b964f433356769dbe3a1c33008d258905afe939421"
+hash = "25ea7e19e119e28ff5102204b0bc6736d89695f66a551459146da13a2b00e0af"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
@@ -733,7 +733,7 @@ packs = []
 
 [[file]]
 path = ".fediim/otel-attributes"
-hash = "7315d1fd0f7b4240b76cd1c4faee34e899e7f64a7eb776b658591d007dc17907"
+hash = "fdeb438e2a14585e50a64c6ad2f22d6f7b08b8a7cc6192ffe3d8c23c45df776f"
 packs = []
 
 [[file]]
@@ -793,7 +793,7 @@ packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".fediim/tools/telemetry.mjs"
-hash = "f7e214f8a5b751946ed2c639669ac02687649dacbd5b393ed857abbf3c084760"
+hash = "cadffd7a616008932d9923a2824929425f01a3d9c54d6314d94cd27df17ff310"
 packs = []
 
 [[file]]

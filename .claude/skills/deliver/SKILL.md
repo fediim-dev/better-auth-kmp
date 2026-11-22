@@ -38,7 +38,7 @@ yourself and `guards.mjs --check-plan .fediim/plans/<n>.md` replaces plan-review
    DO/DON'T lines to the `planner`.
 2. Draft breadth-first inline when this session already runs on `opus`/`pro` and
    the scope is ≤2 files; otherwise Claude Code invoke the `planner` subagent,
-   Antigravity `invoke_subagent` (TypeName: 'planner', Role: 'Planner', Model: 'pro', Workspace: 'inherit')
+   Antigravity `invoke_subagent` (TypeName: 'planner', Role: 'Planner', Model: 'inherit', Workspace: 'inherit')
    with the issue text verbatim (not a gh command) and adopt the draft — you own it.
 3. Include `Alternatives considered` (plan-breadth rule). List interpretations
    of ambiguity: reversible picks go to `## Assumptions`, irreversible ones
@@ -58,7 +58,7 @@ Run `node .fediim/tools/dispatch-check.mjs --plan .fediim/plans/<n>.md`
 
 1. Invoke **plan-reviewer** — Claude Code
    `plan-reviewer` subagent; Antigravity `invoke_subagent`
-   (TypeName: 'plan-reviewer', Role: 'Plan Reviewer', Model: 'pro', Workspace: 'inherit')
+   (TypeName: 'plan-reviewer', Role: 'Plan Reviewer', Model: 'inherit', Workspace: 'inherit')
    — never review your own plan.
 2. Brief per the `fediim-rules` skill, `references/review-quorum.md` (load it): verbatim issue, plan
    file + commit SHA, iteration N of max 3 (1 + earlier
@@ -106,10 +106,10 @@ Per dispatch: `node .fediim/tools/brief.mjs <plan> <ids>`.
    always required, dispatched only after the `Local verification:` comment;
    never review or approve your own PR. Dispatch the Phase 5 triage `reviewers`; an L2 fix loop escalates to `deep-reviewer` at cycle 3.
 2. Claude Code: invoke each listed slug. Antigravity: one `invoke_subagent` per slug, Workspace: 'inherit':
-   (TypeName: 'pr-reviewer-lite', Role: 'PR Reviewer Lite', Model: 'flash'),
-   (TypeName: 'pr-reviewer', Role: 'PR Reviewer', Model: 'pro'),
-   (TypeName: 'deep-reviewer', Role: 'Deep Reviewer', Model: 'pro').
-   The **security-reviewer** (TypeName: 'security-reviewer', Role: 'Security Reviewer', Model: 'pro') is required only when that list marks the PR
+   (TypeName: 'pr-reviewer-lite', Role: 'PR Reviewer Lite', Model: 'inherit'),
+   (TypeName: 'pr-reviewer', Role: 'PR Reviewer', Model: 'inherit'),
+   (TypeName: 'deep-reviewer', Role: 'Deep Reviewer', Model: 'inherit').
+   The **security-reviewer** (TypeName: 'security-reviewer', Role: 'Security Reviewer', Model: 'inherit') is required only when that list marks the PR
    security-relevant; otherwise do not dispatch it. It may run earlier; a
    commit from its notes needs re-verifying before the pr-reviewer.
 3. Brief each reviewer: issue spec,

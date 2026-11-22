@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 const PROJECT = "better-auth-kmp";
 const MANIFEST_ENDPOINT = "http://localhost:6006";
-const VERSION = "0.7.2";
+const VERSION = "0.8.0";
 const PRICING = {"claude-fable-5-2":{"input":8,"output":40,"cacheRead":0.2,"cacheWrite":10},"claude-opus-5-5":{"input":4,"output":20,"cacheRead":0.2,"cacheWrite":5},"claude-sonnet-5-5":{"input":2,"output":10,"cacheRead":0.2,"cacheWrite":2.5},"claude-haiku-5-5":{"input":0.1,"output":0.5,"cacheRead":0.01,"cacheWrite":0.125},"gemini-4-neon":{"input":3,"output":15,"cacheRead":0.15,"cacheWrite":3},"gemini-4-carbon":{"input":2,"output":10,"cacheRead":0.1,"cacheWrite":2},"gemini-4-argon":{"input":2,"output":10,"cacheRead":0.1,"cacheWrite":2},"gemini-3.8-flash":{"input":0.75,"output":3.75,"cacheRead":0.075,"cacheWrite":0.75},"gemini-4-hydrogen":{"input":1.5,"output":7.5,"cacheRead":0.075,"cacheWrite":1.5}};
 const SPOOL_CAP = 2 * 1024 * 1024;
 setTimeout(() => process.exit(0), 2000).unref();
