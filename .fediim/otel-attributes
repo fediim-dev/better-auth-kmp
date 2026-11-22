@@ -1,1 +1,1 @@
-fediim.version=0.7.1,fediim.packs=6e29c60ce246,fediim.preset=custom,fediim.experimental=none,fediim.project=better-auth-kmp,openinference.project.name=better-auth-kmp,service.name=fediim,service.version=0.7.1,fediim.autonomy=autonomous,fediim.stacks=kmp+kotlin
+fediim.version=0.7.2,fediim.packs=6e29c60ce246,fediim.preset=custom,fediim.experimental=none,fediim.project=better-auth-kmp,openinference.project.name=better-auth-kmp,service.name=fediim,service.version=0.7.2,fediim.autonomy=autonomous,fediim.stacks=kmp+kotlin
