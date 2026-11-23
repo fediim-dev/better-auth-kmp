@@ -116,7 +116,7 @@ Server requirements (better-auth 1.7.17, see `tests/contract-server/server.mjs` 
 - `account: { skipStateCookieCheck: true }` with the default database state strategy. The browser that finishes the flow is not the HTTP client that started it, so the state cookie cannot be checked; the SDK compares its own `state` instead. See Security below.
 - `trustedOrigins` must contain every receiver origin and, for the popup flow, the page origin (`popupOrigin`).
 
-Security notes ([CONSTRAINTS.md C6](CONSTRAINTS.md)):
+Security notes ([CONSTRAINTS.md C6](https://github.com/fediim-dev/better-auth-kmp/blob/main/CONSTRAINTS.md)):
 
 - `skipStateCookieCheck` is server-wide. It removes login-CSRF protection for any cookie-session web frontend on the same instance and enables account-linking CSRF through POST `/link-social`. Set `disabledPaths: ["/link-social"]` unless linking is needed, and then only with `allowDifferentEmails` false and email verification required.
 - The `http://127.0.0.1:*` entry in `trustedOrigins` makes every local port a trusted `popupOrigin` (`oauth-popup/index.mjs:112-113`). Add a before-hook rejecting loopback `popupOrigin` on `/oauth-popup/start`, or add the wildcard only on deployments that ship the desktop client.
@@ -226,10 +226,10 @@ repositories {
 ## Build
 
 - `./gradlew check` builds and tests every target (iOS tests need macOS; browser tests need Chrome).
-- `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](tests/contract-harness). The harness starts Node with only `PATH`, `HOME`, the temp-dir variables, `LANG` and `SystemRoot` from the environment, plus `BETTER_AUTH_TELEMETRY=false`.
+- `jvmTest` (hence `check`) also runs the live contract suite against the Node better-auth server in [tests/contract-server](https://github.com/fediim-dev/better-auth-kmp/tree/main/tests/contract-server); it needs Node 22.13+ and npm on `PATH`, and the `npmCi` task installs the pinned dependencies. better-auth-passkeys' `jvmTest` runs against the same server through the shared harness in [tests/contract-harness](https://github.com/fediim-dev/better-auth-kmp/tree/main/tests/contract-harness). The harness starts Node with only `PATH`, `HOME`, the temp-dir variables, `LANG` and `SystemRoot` from the environment, plus `BETTER_AUTH_TELEMETRY=false`.
 - `./gradlew publishToMavenLocal` installs into `~/.m2` without credentials.
 - `./gradlew publishAllPublicationsToGitHubPackagesRepository` publishes; credentials from `gpr.user`/`gpr.key` or `GITHUB_ACTOR`/`GITHUB_TOKEN`.
 - Publishing to `kmp-packages` is manual: run the task above from the release commit. CI's `publish` job is still configured to run on push to `main` and on `v*` tags, but it cannot write to `kmp-packages`: it uses `GITHUB_TOKEN`, which only covers packages linked to this repository (Maven packages on GitHub Packages have repository-scoped permissions). It fails until a `write:packages` token is added as a secret and `.github/workflows/ci.yml` uses it.
 - Versions follow SemVer: two-digit pre-releases `-alphaNN`, `-betaNN`, `-rcNN` (e.g. `1.0.0-alpha01`, `1.0.0-rc02`), then the final release; no snapshot versions. `1.0.0-rc1` predates the two-digit format, so the next release candidate is `1.0.0-rc02` (Gradle and Maven order it after `rc1`; strict SemVer ordering would not). `main` carries the last published version. Release steps: set `version` in `gradle.properties` (and `VERSION` in each module) to the next pre-release or final version, publish, then tag `v<version>`.
 
-See [CONSTRAINTS.md](CONSTRAINTS.md) for architecture rules and [ai-context.md](ai-context.md) for the project map.
+See [CONSTRAINTS.md](https://github.com/fediim-dev/better-auth-kmp/blob/main/CONSTRAINTS.md) for architecture rules and [ai-context.md](https://github.com/fediim-dev/better-auth-kmp/blob/main/ai-context.md) for the project map.
