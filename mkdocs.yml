@@ -1,0 +1,33 @@
+site_name: better-auth-kmp
+site_description: Kotlin Multiplatform client SDK and Compose/FDS UI for Better Auth
+site_url: https://fediim-dev.github.io/better-auth-kmp/
+repo_url: https://github.com/fediim-dev/better-auth-kmp
+edit_uri: edit/main/
+strict: true
+exclude_docs: requirements.txt
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle: { icon: material/brightness-7, name: Dark mode }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle: { icon: material/brightness-4, name: Light mode }
+
+# Pages include the repo READMEs verbatim so the READMEs stay the single source of truth.
+markdown_extensions:
+  - admonition
+  - tables
+  - toc: { permalink: true }
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets: { base_path: ["."], check_paths: true }
+
+nav:
+  - Home: index.md
+  - Sample application: sample.md
