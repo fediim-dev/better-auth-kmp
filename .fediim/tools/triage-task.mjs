@@ -12,7 +12,7 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const PROTECTED_PREFIXES = ["auth/","billing/"];
 const BLOCKED_PREFIXES = ["src/generated/"];
-const SELECTED_REVIEWERS = ["pr-reviewer","security-reviewer"];
+const SELECTED_REVIEWERS = ["deep-reviewer","pr-reviewer","pr-reviewer-lite","security-reviewer"];
 const DOC_RE = /[.](md|txt|rst|adoc)$/i;
 const TEST_PATH_RE = /(^|\/)(tests?|__tests__)\/|[.](test|spec)[.]/i;
 const TEST_NAME_RE = /(^|\/)test_[^/]*[.]py$|_test[.](py|go)$|Tests?[.]kt$/;

@@ -158,8 +158,9 @@ function clearTddRetries(root) {
 function runTddGate(runCmd, root, rawCmd, partial, stamp, handleBusy) {
   const curHash = stamp.treeHash(root) || 'no-git';
   if (!stamp.isRealCi()) {
-    if (payload.stop_hook_active === true) {
-      return { ok: true, notice: 'TDD Gate: stop_hook_active is set \u2014 allowing stop so you can inspect and recover.' };
+    if (payload.stop_hook_active === true || payload.continuation_active === true) {
+      const flag = payload.stop_hook_active === true ? 'stop_hook_active' : 'continuation_active';
+      return { ok: true, notice: 'TDD Gate: ' + flag + ' is set \u2014 allowing stop so you can inspect and recover.' };
     }
     const prev = readTddRetries(root);
     if (prev.treeHash === curHash && prev.count >= 2) {

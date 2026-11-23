@@ -1,5 +1,5 @@
 <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
-# Review quorum  <!-- pack: planning/review-quorum v1.14.1 -->
+# Review quorum  <!-- pack: planning/review-quorum v1.16.0 -->
 
 Authors never review their own work: plans → plan-reviewer, diffs →
 pr-reviewer; work advances or merges only on a recorded `pass` verdict from an
@@ -32,10 +32,10 @@ isolated reviewer subagent (never in the author's own turn).
   decorrelated reviewer on the other runtime to catch correlated failure
   modes. This second reviewer is opt-in, not the default.
 - **Persona & reviewer eligibility (smart ROI triage).** Spawn a subagent only when its model/isolation benefit outweighs the cold-context handoff:
-  - `planner` is conditional: dispatch when the host session runs on a non-planning model (`sonnet`/`flash`) or the issue spans ≥3 modules / >`implementLines`; when the host is already on `fable`/`opus`/`pro` (Gemini 4 Neon / Carbon / Orchestrator) and the scope is ≤2 files, draft `.fediim/plans/<n>.md` inline to avoid reading the same files twice on the planning model.
+  - `planner` is conditional: draft `.fediim/plans/<n>.md` inline on Tier 2–3 when the host session already runs on `fable`/`opus`/`pro` (Gemini 4 Neon / Carbon / Orchestrator) to avoid reading the same files twice; dispatch `planner` on Tier 4 or when the host runs on `sonnet`/`flash`/`hydrogen`.
   - `plan-reviewer` is universal when selected: every plan is reviewed in an isolated context; the drafter never approves its own plan.
   - PR review is universal: every PR passes acceptance-criteria and verification-gate review in an isolated context, by the level triage picks (`pr-reviewer-lite` L1, `pr-reviewer` L2, `deep-reviewer` L3; an unselected level falls back to `pr-reviewer`).
-  - `security-reviewer` is conditional: required for PRs touching authentication, sessions or tokens, authorization (including moving, renaming, or wrapping an existing authorization, tenant, or scope check in a refactor), data handling, billing, secrets, schema migrations, input validation or injection risks, protected paths (including `.github/workflows/` and CI guards), or issues labelled `security` or `safety-critical`; explicitly skipped for UI presentation, styling, layout, copy, or docs changes.
+  - `security-reviewer` is conditional (`triage-task.mjs --verify-diff` Tier 4 is the canonical trigger): required for PRs touching authentication, sessions or tokens, authorization (including moving, renaming, or wrapping an existing authorization, tenant, or scope check in a refactor), data handling, billing, secrets, schema migrations, input validation or injection risks, protected paths (including `.github/workflows/` and CI guards), or issues labelled `security` or `safety-critical`; skip on non-Tier-4 diffs (such as UI presentation, styling, layout, copy, or docs changes).
   - Only dispatched reviewers must return `VERDICT: pass`.
 - **Verdicts are comments.** Reviewer subagents never run `gh pr review
   --approve` or `--request-changes` (`gh` shares the author's identity); the

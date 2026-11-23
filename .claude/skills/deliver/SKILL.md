@@ -36,10 +36,10 @@ yourself and `guards.mjs --check-plan .fediim/plans/<n>.md` replaces plan-review
    expansion or invented requirements.
    Run `node .fediim/tools/recall.mjs --phase plan "<issue terms>"`; give its
    DO/DON'T lines to the `planner`.
-2. Draft breadth-first inline when this session already runs on `opus`/`pro` and
-   the scope is ≤2 files; otherwise Claude Code invoke the `planner` subagent,
+2. Draft inline on Tier 3 (or ≤2 files) on `fable`/`opus`/`pro`/Orchestrator;
+   else (Tier 4 or `sonnet`/`flash`/`hydrogen`) Claude invoke the `planner` subagent,
    Antigravity `invoke_subagent` (TypeName: 'planner', Role: 'Planner', Model: 'inherit', Workspace: 'inherit')
-   with the issue text verbatim (not a gh command) and adopt the draft — you own it.
+   with the issue text verbatim (not a gh command) — you own it.
 3. Include `Alternatives considered` (plan-breadth rule). List interpretations
    of ambiguity: reversible picks go to `## Assumptions`, irreversible ones
    are a human gate.

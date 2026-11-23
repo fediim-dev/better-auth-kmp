@@ -24,7 +24,7 @@ Full procedure: load the `fediim-rules` skill and read `references/budgets.md`.
 Read `CONSTRAINTS.md` before any task. Violating a constraint is a defect; a
 specific one beats a generic rule; contradictions escalate. Amending one is a
 gated human decision (update the spec/RFC and `CONSTRAINTS.md` in the same PR).
-### Delivery cycle (/deliver)  <!-- pack: planning/deliver-loop v1.4.0 -->
+### Delivery cycle (/deliver)  <!-- pack: planning/deliver-loop v1.6.0 -->
 The `deliver` skill (Antigravity: `/deliver`) runs one issue through select → plan → plan-review → code → verify → PR → pr-review → merge gate → retrospect.
 Triage first (`triage-task.mjs`): Tier 0–1 (docs; ≤2 non-test files, ≤40 lines, one module) skip
 the plan and plan-reviewer; Tier 2 plans inline, checked by `guards.mjs --check-plan`; Tier 3–4 add
@@ -75,7 +75,7 @@ Plans list 2–3 materially different approaches with rejection reasons under
 `Alternatives considered` (or one line why only one is viable). Trace callers of
 changed contracts, map edge cases to `T<n>`; irreversible readings (data model, auth,
 public API) block.
-### Review quorum  <!-- pack: planning/review-quorum v1.14.1 -->
+### Review quorum  <!-- pack: planning/review-quorum v1.16.0 -->
 Authors never review their own work: plans → plan-reviewer, diffs →
 pr-reviewer; work advances or merges only on a recorded `pass` verdict from an
 isolated reviewer subagent (never in the author's own turn).

@@ -465,14 +465,25 @@ const branchPlans = (branch, exists) => {
   return n ? ['.fediim/plans/' + n[1] + '.md', '.fediim/plans/archive/' + n[1] + '.md'].filter(exists) : [];
 };
 
+function readGitBranch(root) {
+  if (!root) return '';
+  try {
+    const dotGit = path.join(root, '.git');
+    let gitDir = dotGit;
+    if (fs.statSync(dotGit).isFile()) {
+      const m = /^gitdir:s*(.+)$/m.exec(fs.readFileSync(dotGit, 'utf8'));
+      if (!m) return '';
+      gitDir = path.resolve(root, m[1].trim());
+    }
+    const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf8').trim();
+    return head.startsWith('ref: refs/heads/') ? head.slice('ref: refs/heads/'.length).trim() : '';
+  } catch (err) {
+    return '';
+  }
+}
 const rel = filePath ? path.relative(repoRoot, realPath(path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath))).replace(/\\/g, '/') : '';
 if (rel && !rel.startsWith('..') && isSourceFile(rel)) {
-  let branch = '';
-  try {
-    branch = cp.execFileSync('git', ['-C', repoRoot, 'branch', '--show-current'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  } catch (err) {
-    // no branch: no plan
-  }
+  const branch = readGitBranch(repoRoot);
   const plans = branchPlans(branch, (f) => fs.existsSync(path.join(repoRoot, f)));
   if (plans.length > 0) {
     let implicit = [];

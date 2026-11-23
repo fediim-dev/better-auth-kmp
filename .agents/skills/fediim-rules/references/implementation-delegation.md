@@ -1,5 +1,5 @@
 <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
-# Implementation delegation (Antigravity)  <!-- pack: planning/implementation-delegation v2.0.0 -->
+# Implementation delegation (Antigravity)  <!-- pack: planning/implementation-delegation v2.1.0 -->
 
 Code changes estimated above `[delegation] implementLines` in `fediim.toml`
 (default 100 changed lines) go to the `implementer` subagent via
@@ -34,10 +34,10 @@ smaller ones you make yourself. You plan, brief and review the diff.
   of any ambiguity. Exact values (numbers, strings, signatures, test cases)
   appear only in the brief.
 - **Model per step.** Always name the model; an omitted one inherits the
-  host's, usually the most expensive. Map the step's tag: `[mechanical]` →
-  `Model: 'flash'`; untagged (standard) → `Model: 'pro'`; `[judgment]` stays
-  with you. Send several `[mechanical]` steps of the same shape in one
-  dispatch.
+  host's, usually the most expensive. Map the step's tag: `[mechanical]` or
+  untagged (standard) → `Model: 'flash'` (Gemini 4 Hydrogen, escalating to
+  `'pro'` on Fix-loop rounds 4–5); `[judgment]` stays with you. Send several
+  `[mechanical]` steps of the same shape in one dispatch.
 - **Status.** The implementer replies `STATUS: DONE | DONE_WITH_CONCERNS |
   NEEDS_CONTEXT | BLOCKED` and writes its report to the `Report:` path.
   NEEDS_CONTEXT: add the context and continue the same agent. BLOCKED: more

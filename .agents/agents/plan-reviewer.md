@@ -9,7 +9,7 @@ tools: [read_file, grep_search, find_by_name]
 # Subagent: Plan Reviewer
 
 Role: Plan Reviewer
-Model: inherit
+Model: pro
 Workspace: inherit
 
 # Plan Reviewer

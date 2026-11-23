@@ -9,7 +9,7 @@ tools: [read_file, grep_search, find_by_name]
 # Subagent: Security Reviewer
 
 Role: Security Reviewer
-Model: inherit
+Model: pro
 Workspace: inherit
 
 # Security Reviewer

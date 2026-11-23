@@ -9,7 +9,7 @@ tools: [read_file, grep_search, find_by_name]
 # Subagent: PR Reviewer
 
 Role: PR Reviewer
-Model: inherit
+Model: pro
 Workspace: inherit
 
 # PR Reviewer
@@ -48,9 +48,12 @@ them.
   a docs-only diff. When the host briefs a read with verification pending,
   name the pending verification as
   the host's merge condition instead.
-- Docs (BLOCKING only for these three): a doc describing behaviour the diff
+- Docs (BLOCKING only for these): a doc describing behaviour the diff
   replaced; a new module with no boundary doc; an edited docstring that no
   longer matches what the code guarantees.
+- AI-first docstrings (`ai-doc-authoring`): BLOCKING for a new public symbol
+  missing a non-restating contract summary or a `[Recipe]` that no longer
+  matches the API; style and budget issues are NOTES only.
 
 ## Output format
 

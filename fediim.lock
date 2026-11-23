@@ -1,5 +1,5 @@
 version = 1
-cliVersion = "0.8.0"
+cliVersion = "0.9.0"
 
 [[pack]]
 id = "coding/ai-first-docs"
@@ -34,6 +34,10 @@ id = "coding/tdd-gate"
 version = "1.2.0"
 
 [[pack]]
+id = "personas/deep-reviewer"
+version = "1.0.0"
+
+[[pack]]
 id = "personas/implementer"
 version = "1.6.2"
 
@@ -47,7 +51,11 @@ version = "1.10.2"
 
 [[pack]]
 id = "personas/pr-reviewer"
-version = "2.0.0"
+version = "2.1.0"
+
+[[pack]]
+id = "personas/pr-reviewer-lite"
+version = "1.0.0"
 
 [[pack]]
 id = "personas/security-reviewer"
@@ -71,7 +79,7 @@ version = "1.5.0"
 
 [[pack]]
 id = "planning/deliver-loop"
-version = "1.4.0"
+version = "1.6.0"
 
 [[pack]]
 id = "planning/git-workflow"
@@ -83,7 +91,7 @@ version = "1.6.0"
 
 [[pack]]
 id = "planning/implementation-delegation"
-version = "2.0.0"
+version = "2.1.0"
 
 [[pack]]
 id = "planning/inbox-digest"
@@ -115,7 +123,7 @@ version = "1.6.0"
 
 [[pack]]
 id = "planning/review-quorum"
-version = "1.14.1"
+version = "1.16.0"
 
 [[pack]]
 id = "planning/self-eval"
@@ -142,28 +150,38 @@ id = "security/untrusted-task-inputs"
 version = "1.5.0"
 
 [[file]]
+path = ".agents/agents/deep-reviewer.md"
+hash = "49ebf635f8d0c977af8814518f8af55aaa6db2c6456424a0cb58697c6f178319"
+packs = [ "personas/deep-reviewer" ]
+
+[[file]]
 path = ".agents/agents/implementer.md"
 hash = "a8792aed3efddfe08e23351a7eda9174368991f1ff96cf09449159547a412202"
 packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".agents/agents/plan-reviewer.md"
-hash = "7c4618f953754c07f08e1e7788be9f7a31e131886421630737fd532f5ec36b78"
+hash = "0edbab1649b75cacbf0eaf1533c58e571221b96b93a426621a8a587da6d3c926"
 packs = [ "personas/plan-reviewer" ]
 
 [[file]]
 path = ".agents/agents/planner.md"
-hash = "6f436be5c8d69e469968a9fb2c60d00feafec270e2ef9c81e2b9105d6d02871e"
+hash = "b7d7cf70bea2cff1d5c1441b5c9cdd69b63de950d48446b1a1fcef84cb9294ec"
 packs = [ "personas/planner" ]
 
 [[file]]
+path = ".agents/agents/pr-reviewer-lite.md"
+hash = "262eb130c228bfddf366ca985187b9d91d2db942565ff966e0f1fec506cbbe4c"
+packs = [ "personas/pr-reviewer-lite" ]
+
+[[file]]
 path = ".agents/agents/pr-reviewer.md"
-hash = "c1787b92057edd4f64b6e2cdc8e9df004439809aa45862ac93cb027efc7eae43"
+hash = "221add6a94e8a43fe3d9ad8876dd066cb2175b1003e497c9f3a7c2759bf33062"
 packs = [ "personas/pr-reviewer" ]
 
 [[file]]
 path = ".agents/agents/security-reviewer.md"
-hash = "164aaab052df2a9dd505c3c0940c01ff9b84dbd35df1d70418bd458dd1ed332e"
+hash = "99a941bcc491091d669eaec703ac4db737f1a75b73b457e892c7a757a2826ef4"
 packs = [ "personas/security-reviewer" ]
 
 [[file]]
@@ -188,12 +206,12 @@ packs = []
 
 [[file]]
 path = ".agents/hooks/pre-write.cjs"
-hash = "753a278d1e38fffdad0160809f00caf1786bd340f3b410c436f54d5af627df7d"
+hash = "e7e3fb39f067155e339493ab795cd83e31b68f74f1a9fdc00b36cf10b457b3ab"
 packs = [ "security/no-hardcoded-secrets", "security/protected-paths" ]
 
 [[file]]
 path = ".agents/hooks/tdd-stop.cjs"
-hash = "98dd29890d663f678eec622047d74628ec91e1f02b2dc37db596bb71631f24da"
+hash = "738f792f6e0f5c405a3529131cfbaf086cdec512b7baf3e4caf1948b38b7aa40"
 packs = [ "coding/tdd-gate" ]
 
 [[file]]
@@ -237,8 +255,13 @@ hash = "3b13fedc578c8200b240947507de485243ff894e98882f51a87a6836785fb62d"
 packs = [ "planning/model-fallback" ]
 
 [[file]]
+path = ".agents/skills/ai-doc-authoring/audit.md"
+hash = "efe99002954f941732c7f73199df81bffe3c5d00c977ee213076185af4de4fff"
+packs = [ "coding/ai-first-docs" ]
+
+[[file]]
 path = ".agents/skills/ai-doc-authoring/SKILL.md"
-hash = "29b5cdfa06743452878fb8c7a68f226140dfb77fe638bcdd0bcf4a3c9a0f2469"
+hash = "1f89798fa7f7a1e5e6e25304f9455d800a87115c3632ddb1db9f87def0adc41b"
 packs = [ "coding/ai-first-docs" ]
 
 [[file]]
@@ -248,7 +271,7 @@ packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".agents/skills/deliver/SKILL.md"
-hash = "7ea041d986f32dabe05066bdaa64c681ce05795c388f232d5f6411d78adfb555"
+hash = "803f63fcd9fbf22a39e7eaa71409ef7184baf5760bcfafac2023eb0d79bad8fe"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
@@ -278,7 +301,7 @@ packs = [ "planning/git-workflow" ]
 
 [[file]]
 path = ".agents/skills/fediim-rules/references/implementation-delegation.md"
-hash = "ddc3cba35bb32647cecbaa9478789cbb1d383415ed7bd361feb79d9d7b0cc022"
+hash = "3521e59c876d2b8bf23d4cbded6045a34078dd3f29ced552fcb6e617590753f4"
 packs = [ "planning/implementation-delegation" ]
 
 [[file]]
@@ -303,12 +326,12 @@ packs = [ "coding/project-docs" ]
 
 [[file]]
 path = ".agents/skills/fediim-rules/references/review-quorum.md"
-hash = "138fd55c97c981cbf68e011fc2795ce1e25d95209901041dd51390212652a8c3"
+hash = "1eb50d9c34a189c85dcb565c12865ffceae63562a5dc7137710678486ff3baab"
 packs = [ "planning/review-quorum" ]
 
 [[file]]
 path = ".agents/skills/fediim-rules/SKILL.md"
-hash = "228804b0f5514deab58036c78f15778c779bd4bc9ce522aae967b19d727e933f"
+hash = "4f3771b1aacc6a66dcf4eba254dc49c9a2f27f6d3fcecba6bb6c5a432e91abc1"
 packs = [ "coding/architecture-boundaries", "coding/project-docs", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/git-workflow", "planning/implementation-delegation", "planning/issue-structure", "planning/model-fallback", "planning/parallel-dispatch", "planning/review-quorum" ]
 
 [[file]]
@@ -427,28 +450,38 @@ hash = "bc10ed7b5944024fb4db45f62dce21950b425336dca29eeec1d44696b0d014db"
 packs = [ "coding/debugging-discipline" ]
 
 [[file]]
+path = ".claude/agents/deep-reviewer.md"
+hash = "e6bb543c0bbba3b77d8e4e5395aaf0a7e74427b007f1273b36ad071673958941"
+packs = [ "personas/deep-reviewer" ]
+
+[[file]]
 path = ".claude/agents/implementer.md"
 hash = "cb68fc6dc4132b746568ddc6916f96edd0b144076d1288e2e634d11409c7456c"
 packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".claude/agents/plan-reviewer.md"
-hash = "9eccbf4f811512150ed5d1a07f4f33abd29e8683cae938d89e4301c714965dc5"
+hash = "380a1bc7ca938f625837201e7b24a4b68f69565d4fe7209db30eb4eec86cf6fb"
 packs = [ "personas/plan-reviewer" ]
 
 [[file]]
 path = ".claude/agents/planner.md"
-hash = "0b2a76ca7ab3cf6059549aba9482c828241af95f65f437c2a5c28bbf62c166d5"
+hash = "839a2af4e7a387467547dcbd6c8532213c1419abae35a9f60e41a59f213f3508"
 packs = [ "personas/planner" ]
 
 [[file]]
+path = ".claude/agents/pr-reviewer-lite.md"
+hash = "7dcae2f92800e8f3111ed1b0dd6be468a575dd243b4b225141fc4c8042313199"
+packs = [ "personas/pr-reviewer-lite" ]
+
+[[file]]
 path = ".claude/agents/pr-reviewer.md"
-hash = "f61182ef948e31a45fbf3cd52b219a4bfd69068afe908869583268343d5daccf"
+hash = "7f348c0282ead9cd529a43e57ca1783ed9e3bcbef4b59677976e66ed7713d420"
 packs = [ "personas/pr-reviewer" ]
 
 [[file]]
 path = ".claude/agents/security-reviewer.md"
-hash = "c989948e4ed91218de7f821222d6675dac796de91ec11338e8ce531a0beffbf2"
+hash = "2e25c0a6943b105e2d274a54089d3c7fb1d9a199701d70078181e3aba560c64e"
 packs = [ "personas/security-reviewer" ]
 
 [[file]]
@@ -468,12 +501,12 @@ packs = []
 
 [[file]]
 path = ".claude/hooks/pre-write.cjs"
-hash = "235f10d23126db8ce579ffe0339a071bcb545e774ec1dae472fa21944f6390f0"
+hash = "9821b304046fda1e36e00580b66e61d525dfe490af642ce413958dd97bdba34d"
 packs = [ "security/no-hardcoded-secrets", "security/protected-paths" ]
 
 [[file]]
 path = ".claude/hooks/tdd-stop.cjs"
-hash = "ee33effab3dc3ac0b196a8b3037765e04fe1ca26295f095b807d287be45ad34b"
+hash = "47c290f3136b84af37e758ebf9c5f36feb3812c744b80a857d0294f8065f97e4"
 packs = [ "coding/tdd-gate" ]
 
 [[file]]
@@ -513,12 +546,17 @@ packs = [ "planning/model-fallback" ]
 
 [[file]]
 path = ".claude/settings.json"
-hash = "db7fad9ddb2cd158643c6afafadf18a812778e6e2b07d753fc622887d601934f"
+hash = "c2cb4bf0ccfee5586587805c08e2086b7db90601324123c7da991dfb099b21b7"
 packs = []
 
 [[file]]
+path = ".claude/skills/ai-doc-authoring/audit.md"
+hash = "efe99002954f941732c7f73199df81bffe3c5d00c977ee213076185af4de4fff"
+packs = [ "coding/ai-first-docs" ]
+
+[[file]]
 path = ".claude/skills/ai-doc-authoring/SKILL.md"
-hash = "29b5cdfa06743452878fb8c7a68f226140dfb77fe638bcdd0bcf4a3c9a0f2469"
+hash = "1f89798fa7f7a1e5e6e25304f9455d800a87115c3632ddb1db9f87def0adc41b"
 packs = [ "coding/ai-first-docs" ]
 
 [[file]]
@@ -528,7 +566,7 @@ packs = [ "coding/ai-first-docs" ]
 
 [[file]]
 path = ".claude/skills/deliver/SKILL.md"
-hash = "25ea7e19e119e28ff5102204b0bc6736d89695f66a551459146da13a2b00e0af"
+hash = "4a50c2de4ec955ef751e2581506cf2089a6f194511e6a0b3fa4d1cb00f4d633e"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
@@ -558,7 +596,7 @@ packs = [ "planning/git-workflow" ]
 
 [[file]]
 path = ".claude/skills/fediim-rules/references/implementation-delegation.md"
-hash = "524e6befc1b60b0bd21ab582b5b753f1d7553621e9f3126331a4454470e8a88e"
+hash = "ac7366f754f3d7b3f4c0a9b51dddfa800ec0a7739256b1d7aef43b24cc1db08f"
 packs = [ "planning/implementation-delegation" ]
 
 [[file]]
@@ -583,12 +621,12 @@ packs = [ "coding/project-docs" ]
 
 [[file]]
 path = ".claude/skills/fediim-rules/references/review-quorum.md"
-hash = "138fd55c97c981cbf68e011fc2795ce1e25d95209901041dd51390212652a8c3"
+hash = "1eb50d9c34a189c85dcb565c12865ffceae63562a5dc7137710678486ff3baab"
 packs = [ "planning/review-quorum" ]
 
 [[file]]
 path = ".claude/skills/fediim-rules/SKILL.md"
-hash = "228804b0f5514deab58036c78f15778c779bd4bc9ce522aae967b19d727e933f"
+hash = "4f3771b1aacc6a66dcf4eba254dc49c9a2f27f6d3fcecba6bb6c5a432e91abc1"
 packs = [ "coding/architecture-boundaries", "coding/project-docs", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/git-workflow", "planning/implementation-delegation", "planning/issue-structure", "planning/model-fallback", "planning/parallel-dispatch", "planning/review-quorum" ]
 
 [[file]]
@@ -733,7 +771,7 @@ packs = []
 
 [[file]]
 path = ".fediim/otel-attributes"
-hash = "fdeb438e2a14585e50a64c6ad2f22d6f7b08b8a7cc6192ffe3d8c23c45df776f"
+hash = "afff0d48327042650599f6867cfd9e82178c513c635406e18d3c34aa8ed58bdd"
 packs = []
 
 [[file]]
@@ -793,12 +831,12 @@ packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".fediim/tools/telemetry.mjs"
-hash = "cadffd7a616008932d9923a2824929425f01a3d9c54d6314d94cd27df17ff310"
+hash = "82f74f4c93be86262c04ed396724a67bb24f36b2dad0798a55981d0240ff98d4"
 packs = []
 
 [[file]]
 path = ".fediim/tools/triage-task.mjs"
-hash = "f8c8b456874e9df358653026544daaad7470010a46b95685f35868a4f7ccb420"
+hash = "54dd030f15a8ad5189a90971ad18a72a26ab8ba7952463062745c7d7a293d906"
 packs = [ "planning/deliver-loop" ]
 
 [[file]]
@@ -823,7 +861,7 @@ packs = [ "planning/issue-structure" ]
 
 [[file]]
 path = "AGENTS.md"
-hash = "dbcae4aed13d5f310765bd3a5073f63fc92e588d6eef9641014dc0dd50e1c0df"
+hash = "4d7f6ac3af49bcde62ad84ed2f1926fbd8dfcb831f0b88618dfdb56b33721dd7"
 packs = [ "coding/ai-first-docs", "coding/architecture-boundaries", "coding/base", "coding/debugging-discipline", "coding/no-guessed-apis", "coding/output-discipline", "coding/project-docs", "coding/tdd-gate", "planning/assumptions-ledger", "planning/autonomous-loop", "planning/budgets", "planning/constraints-register", "planning/deliver-loop", "planning/git-workflow", "planning/human-gates", "planning/inbox-digest", "planning/intake", "planning/issue-structure", "planning/learned-rules", "planning/parallel-dispatch", "planning/plan-breadth", "planning/review-quorum", "planning/self-eval", "planning/spec-lock", "planning/verification-gates", "security/no-hardcoded-secrets", "security/protected-paths", "security/untrusted-task-inputs" ]
 
 [[file]]
@@ -833,7 +871,7 @@ packs = []
 
 [[file]]
 path = "fediim.toml"
-hash = "eb3a2dea32097e4f4f66f20f03ce30234054217fa3e7e0dc71924be4dc3fce59"
+hash = "a1ef7a43aee3954012de28055075f32aad3c4d65699fa696d8dc538ceff3e85b"
 packs = []
 
 [[file]]
