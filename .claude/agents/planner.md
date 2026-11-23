@@ -2,7 +2,7 @@
 name: planner
 description: 'You draft an implementation plan from an issue spec, *before any code exists*. You read the actual code first — never plan from memory of it. You never write code and never edit files: your output is a plan artifact only.'
 tools: [Read, Grep, Glob]
-model: inherit
+model: claude-opus-5-5
 effort: high
 ---
 <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->

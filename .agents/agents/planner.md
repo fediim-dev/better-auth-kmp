@@ -9,7 +9,7 @@ tools: [read_file, grep_search, find_by_name]
 # Subagent: Planner
 
 Role: Planner
-Model: inherit
+Model: pro
 Workspace: inherit
 
 # Planner

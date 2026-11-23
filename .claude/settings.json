@@ -17,7 +17,7 @@
     "OTEL_METRICS_EXPORTER": "none",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
     "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT": "http://ntcserver-macmini:6006/v1/traces",
-    "OTEL_RESOURCE_ATTRIBUTES": "fediim.version=0.8.0,fediim.packs=6e29c60ce246,fediim.preset=custom,fediim.experimental=none,fediim.project=better-auth-kmp,openinference.project.name=better-auth-kmp,service.name=fediim,service.version=0.8.0,fediim.autonomy=autonomous,fediim.stacks=kmp+kotlin"
+    "OTEL_RESOURCE_ATTRIBUTES": "fediim.version=0.9.0,fediim.packs=ef91dd887e94,fediim.preset=custom,fediim.experimental=none,fediim.project=better-auth-kmp,openinference.project.name=better-auth-kmp,service.name=fediim,service.version=0.9.0,fediim.autonomy=autonomous,fediim.stacks=kmp+kotlin"
   },
   "sandbox": {
     "enabled": false

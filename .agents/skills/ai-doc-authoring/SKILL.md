@@ -67,5 +67,4 @@ per-language templates, a worked example and an anti-example.
 - [ ] Units, threading, lifecycle and errors stated where types don't.
 - [ ] Traps are `[Anti-Pattern]`; recipes compile against the committed API.
 - [ ] Manifests recompiled (`ai-docs compile`); `ai-docs lint` passes.
-- [ ] If the `doc-auditor` persona is installed, the host's `/deliver` Phase 5
-      gate audits these docstrings.
+- [ ] `pr-reviewer` checks contracts, `[Recipe]`, and stale docs in `/deliver`; load `audit.md` for standalone audits.

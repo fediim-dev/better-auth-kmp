@@ -1,10 +1,14 @@
 <!-- fediim:generated v1 — do not edit; customise via .fediim/overrides/ -->
-# Implementation delegation (Claude Code)  <!-- pack: planning/implementation-delegation v2.0.0 -->
+# Implementation delegation (Claude Code)  <!-- pack: planning/implementation-delegation v2.1.0 -->
 
 Code changes estimated above `[delegation] implementLines` in `fediim.toml`
 (default 100 changed lines) go to the `implementer` subagent; smaller ones you
 make yourself. You plan, brief and review the diff.
 
+- **Same-tier guard.** When the host session already runs on `sonnet`, keep
+  sequential edits inline rather than spawning `implementer` (`sonnet` →
+  `sonnet` pays handoff cost with no tier saving); still delegate
+  `[mechanical]` batches to `haiku` or parallel worktrees.
 - **Estimate & warm-context check.** Count added plus deleted lines from the
   plan before writing code (`implementLines = 0` means always delegate). Keep
   edits inline in your warm session when ≤`implementLines` or when editing a
