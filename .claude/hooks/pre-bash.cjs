@@ -446,8 +446,31 @@ const GH_API_VALUE_FLAGS = new Set(['-X', '--method', '-H', '--header', '-q', '-
 const GH_INLINE_FLAGS = new Set(['--body', '-b', '--title', '-t', '--notes', '-n']);
 const GH_FILE_FLAGS = new Set(['--body-file', '--notes-file', '--input']);
 
+// Rule 3 guards where gh sends data; a read sends none, so it may reach any github.com repo.
+function ghReadOnly(isApi, args) {
+  if (isApi) {
+    let method = '';
+    let body = false;
+    for (let i = 1; i < args.length; i++) {
+      const m = /^(?:-X=?|--method=)(.+)$/.exec(args[i]);
+      if (args[i] === '-X' || args[i] === '--method') method = args[i + 1] || 'POST';
+      else if (m) method = m[1];
+      else if (/^--input(?:=|$)/.test(args[i])) return false;
+      else if (/^(?:-[fF]|--field|--raw-field)(?:=|$)|^-[fF]./.test(args[i])) body = true;
+    }
+    return method ? method.toUpperCase() === 'GET' : !body;
+  }
+  const words = [];
+  for (let i = 0; i < args.length && words.length < 2; i++) {
+    if (args[i] === '-R' || args[i] === '--repo') i++;
+    else if (!args[i].startsWith('-')) words.push(args[i]);
+  }
+  return /^(?:view|list|status|diff|checks)$/.test(words[1] || '');
+}
+
 function ghProblem(name, args, dir, inv) {
   const isApi = name === 'gh' && args[0] === 'api';
+  const readOnly = name === 'gh' && ghReadOnly(isApi, args);
   const scan = (v, flag) => (ghSecretPatterns.some((re) => re.test(v)) ? flag + ' value looks like a secret' : '');
   const consumed = new Set();
   const expands = inv && Array.isArray(inv.expandArgs)
@@ -468,7 +491,7 @@ function ghProblem(name, args, dir, inv) {
     let bad = '';
     if (a === '-R' || a === '--repo') {
       const why = ghRepoProblem(value, dir);
-      if (why) return 'Rule 3 (destination): ' + a + ' ' + value + ': ' + why + '. Run gh from a checkout of that repo, or use a repo under the origin owner.';
+      if (why && !(readOnly && !why.startsWith('host '))) return 'Rule 3 (destination): ' + a + ' ' + value + ': ' + why + '. Run gh from a checkout of that repo, or use a repo under the origin owner.';
     } else if (a === '--hostname') {
       if (value.toLowerCase() !== 'github.com') return 'Rule 3 (destination): --hostname ' + value + ' is not github.com. Only github.com is allowed.';
     } else if (GH_FILE_FLAGS.has(a) || (a === '-F' && !isApi)) {
@@ -499,7 +522,7 @@ function ghProblem(name, args, dir, inv) {
       if (url && (url[1] || url[2].includes('.'))) {
         const host = url[2].toLowerCase() === 'www.github.com' ? 'github.com' : url[2];
         const why = ghRepoProblem(host + '/' + url[3] + '/' + url[4], dir);
-        if (why) return 'Rule 3 (destination): ' + a + ': ' + why + '. Use the issue or PR number from a checkout of that repo.';
+        if (why && !(readOnly && !why.startsWith('host '))) return 'Rule 3 (destination): ' + a + ': ' + why + '. Use the issue or PR number from a checkout of that repo.';
       } else {
         const other = /^https?:\/\/([^/]+)/i.exec(a);
         if (other && !['github.com', 'www.github.com', 'api.github.com'].includes(other[1].toLowerCase())) return 'Rule 3 (destination): ' + other[1] + ' is not a GitHub host and is blocked.';
@@ -514,7 +537,7 @@ function ghProblem(name, args, dir, inv) {
       if (url && !['api.github.com', 'github.com'].includes(url[1].toLowerCase())) return 'Rule 3 (destination): gh api to ' + url[1] + ' is blocked. Only api.github.com is allowed.';
       const repo = /^\/?repos\/([^/]+)\//.exec(a);
       // {owner}/:owner is filled by gh from the same base repo a command without -R uses, so it adds no destination.
-      if (repo && !/^(?:\{owner\}|:owner)$/.test(repo[1])) {
+      if (repo && !readOnly && !/^(?:\{owner\}|:owner)$/.test(repo[1])) {
         const origin = ghOriginOwner(dir);
         // no parseable origin: nothing to compare with, so only -R/--repo/GH_REPO fail closed
         if (origin && repo[1].toLowerCase() !== origin) return 'Rule 3 (destination): gh api repos/' + repo[1] + '/... is not under the origin owner ' + origin + '. Run it from a checkout of that repo.';
