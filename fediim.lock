@@ -1,5 +1,5 @@
 version = 1
-cliVersion = "0.9.0"
+cliVersion = "0.9.1"
 
 [[pack]]
 id = "coding/ai-first-docs"
@@ -191,7 +191,7 @@ packs = []
 
 [[file]]
 path = ".agents/hooks/pre-bash.cjs"
-hash = "bf4607874df759b63ac148380493127052c29aa3eac4ba9cb1829fa95880b928"
+hash = "6d544cac6867472141d7103688b47fdd10fe23a3ad6254f7e0393439d8e164b6"
 packs = []
 
 [[file]]
@@ -491,7 +491,7 @@ packs = []
 
 [[file]]
 path = ".claude/hooks/pre-bash.cjs"
-hash = "583a61bbd9bb4b764e076632a06ee9a5cb517f86213f4346bcf14e6a79bf0a8d"
+hash = "47c2235f895de62c580378aa1f5fbc50ff0e92dd97e1fbe0a71e2bfc339ed164"
 packs = []
 
 [[file]]
@@ -546,7 +546,7 @@ packs = [ "planning/model-fallback" ]
 
 [[file]]
 path = ".claude/settings.json"
-hash = "c2cb4bf0ccfee5586587805c08e2086b7db90601324123c7da991dfb099b21b7"
+hash = "66f4076b19a63bfc19d6681be5dfca4fb1d2e7523b8b9ce066af954e77118378"
 packs = []
 
 [[file]]
@@ -771,7 +771,7 @@ packs = []
 
 [[file]]
 path = ".fediim/otel-attributes"
-hash = "afff0d48327042650599f6867cfd9e82178c513c635406e18d3c34aa8ed58bdd"
+hash = "6dc4f3454d741852b24448c1c5a1c37df1fc8935336bd11bcfc1440f6195f359"
 packs = []
 
 [[file]]
@@ -831,7 +831,7 @@ packs = [ "personas/implementer" ]
 
 [[file]]
 path = ".fediim/tools/telemetry.mjs"
-hash = "82f74f4c93be86262c04ed396724a67bb24f36b2dad0798a55981d0240ff98d4"
+hash = "b450bf70546ec13260d26f34e6f9f04ba73db9db7d075390af217b6622566d83"
 packs = []
 
 [[file]]
