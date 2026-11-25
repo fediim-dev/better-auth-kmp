@@ -39,7 +39,7 @@ intake decisions quoted from their source issue.
 - **Rationale:** One API surface for all supported platforms.
 
 ### C2 · Maven Coordinates (#1) [irreversible]
-- **Constraint:** Group `dev.fediim.auth` with modules `better-auth-core`, `better-auth-passkeys`, `better-auth-compose`, and `better-auth-fds`. (Publish destinations — `maven.pkg.github.com/fediim-dev/kmp-packages` and `mavenLocal` — are part of #1's `[reversible]` toolchain & publishing decision.)
+- **Constraint:** Group `dev.fediim.auth` with modules `better-auth-core`, `better-auth-passkeys`, `better-auth-compose`, and `better-auth-fds`. (Publish destinations — `maven.pkg.github.com/fediim-dev/kmp-packages`, the self-hosted Reposilite (`reposilite.url`, default `http://ntcserver-macmini:8083`, `/releases` path) and `mavenLocal` — are part of #1's `[reversible]` toolchain & publishing decision.)
 - **Rationale:** Published coordinates cannot change without breaking consumers.
 
 ### C3 · Module Layering & Dependency Policy (#1, #7)
