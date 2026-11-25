@@ -3,7 +3,7 @@ Kotlin Multiplatform client SDK and Compose/FDS UI for Better Auth
 
 ## Modules
 
-Group `dev.fediim.auth`, version `1.0.0-rc1`; targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
+Group `dev.fediim.auth`, version `1.0.0-rc02`; targets jvm, android, iosArm64, iosSimulatorArm64, js, wasmJs.
 
 | Artifact | Depends on |
 |---|---|
